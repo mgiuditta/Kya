@@ -8,7 +8,12 @@
 #include "profiling.h"
 
 #include <readerwriterqueue.h>
+
+#ifdef _WIN32
 #include <windows.h>
+#else
+#include <pthread.h>
+#endif
 
 #include <atomic>
 #include <chrono>
@@ -479,8 +484,10 @@ namespace Renderer
 			{
 				thread = std::thread(&RenderThread::Run, this);
 
+#ifdef _WIN32
 				// Set thread name
 				SetThreadDescription(thread.native_handle(), L"RenderThread");
+#endif
 			}
 
 			~RenderThread()
@@ -555,6 +562,10 @@ namespace Renderer
 
 			void Run()
 			{
+#ifdef __APPLE__
+				// macOS can only name the calling thread.
+				pthread_setname_np("RenderThread");
+#endif
 				while (!bShouldStop) {
 					std::unique_lock<std::mutex> lock(mutex);
 					cv.wait(lock, [this] { return commands.peek() || bShouldStop; });

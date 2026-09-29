@@ -6,8 +6,10 @@
 #include "DebugMenu.h"
 #include "glm/glm.hpp"
 
+#ifdef _WIN32
 #define NOMINMAX
 #include <Windows.h>
+#endif
 
 #include <sstream>
 #include <fstream>
@@ -70,6 +72,9 @@ namespace Debug::Camera {
 	void CopyMatrixCodeToClipboard(const edF32MATRIX4& matrix) {
 		std::string code = GenerateMatrixConstructionCode(matrix);
 
+#ifndef _WIN32
+		ImGui::SetClipboardText(code.c_str());
+#else
 		// Open the clipboard
 		if (OpenClipboard(NULL)) {
 			// Allocate a global memory block to hold the code
@@ -97,6 +102,7 @@ namespace Debug::Camera {
 			// Close the clipboard
 			CloseClipboard();
 		}
+#endif
 	}
 
 	float gMouseDeltaX = 0.0f;

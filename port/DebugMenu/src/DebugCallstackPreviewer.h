@@ -1,9 +1,10 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <cstdint>
 
 // Forward dec.
-typedef unsigned __int64 DWORD64;
+typedef uint64_t DWORD64;
 
 struct CallstackPreviewerEntry {
 	CallstackPreviewerEntry(std::vector<DWORD64> inBacktrace)

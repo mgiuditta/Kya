@@ -9,8 +9,12 @@
 #include <string.h>
 #include <stdint.h>
 #include <fcntl.h>
+#ifdef _WIN32
 #include <io.h>
+#endif
+#ifndef __APPLE__
 #include "libfmemopen.h"
+#endif
 
 #ifdef ENABLE_PSS_LOG
 #define printf

@@ -547,7 +547,7 @@ public:
 		pCVar1 = this->aFx;
 		pNodes = this->aNodes;
 
-		const int fxIndex = (reinterpret_cast<int>(pFx) - reinterpret_cast<int>(pCVar1)) / sizeof(FxType);
+		const int fxIndex = static_cast<int>((reinterpret_cast<intptr_t>(pFx) - reinterpret_cast<intptr_t>(pCVar1)) / sizeof(FxType));
 
 		this->activeList.RemoveNode(pNodes + fxIndex);
 		this->freeList.InsertAfterQueue(pNodes + fxIndex);

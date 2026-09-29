@@ -36,7 +36,7 @@ namespace Debug {
 			auto settings = LoadSettings();
 			if (settings) {
 				if (settings->contains(name)) {
-					value = (*settings)[name].get<SettingType>();
+					value = (*settings)[name].template get<SettingType>();
 				}
 			}
 		}

@@ -71,4 +71,43 @@ inline void CollectCallstack(std::vector<std::string>& callstack) {
 	CollectBacktrace(backtrace);
 	CollectCallstack(callstack, backtrace);
 }
+#else
+#include <execinfo.h>
+
+#include <cstdint>
+#include <cstdlib>
+#include <string>
+#include <vector>
+
+typedef uint64_t DWORD64;
+
+inline void CollectBacktrace(std::vector<DWORD64>& backtrace) {
+	const int maxFrames = 64;
+	void* stackFrames[maxFrames];
+	const int frameCount = ::backtrace(stackFrames, maxFrames);
+
+	for (int i = 0; i < frameCount; ++i) {
+		backtrace.push_back(reinterpret_cast<DWORD64>(stackFrames[i]));
+	}
+}
+
+// No file/line lookup outside Windows; symbol names come from the dynamic symbol table.
+inline void CollectCallstack(std::vector<std::string>& callstack, const std::vector<DWORD64>& backtrace, bool bShowFileName = true, bool bShowLineNumber = true) {
+	std::vector<void*> frames;
+	for (auto address : backtrace) {
+		frames.push_back(reinterpret_cast<void*>(address));
+	}
+
+	char** symbols = backtrace_symbols(frames.data(), static_cast<int>(frames.size()));
+	for (size_t i = 0; i < frames.size(); ++i) {
+		callstack.push_back(symbols ? symbols[i] : "Unknown Symbol");
+	}
+	free(symbols);
+}
+
+inline void CollectCallstack(std::vector<std::string>& callstack) {
+	std::vector<DWORD64> backtrace;
+	CollectBacktrace(backtrace);
+	CollectCallstack(callstack, backtrace);
+}
 #endif

@@ -770,7 +770,7 @@ namespace MovingPlatform
 
 namespace Wolfen
 {
-	static const char* GetBehaviourName(int curBehaviourId)
+	const char* GetBehaviourName(int curBehaviourId)
 	{
 		INHERITS_FROM_FIGHTER_BEHAVIOUR(curBehaviourId);
 
@@ -808,7 +808,7 @@ namespace Wolfen
 		}
 	}
 
-	static const char* GetStateName(int state)
+	const char* GetStateName(int state)
 	{
 		switch (state) {
 		case WOLFEN_STATE_WATCH_DOG_GUARD:

@@ -3,6 +3,11 @@
 #include "VulkanIncludes.h"
 #include <array>
 
+// Declared in VulkanRenderer.h; the templates below need them at definition time.
+VkDevice GetDevice();
+VkPhysicalDevice GetPhysicalDevice();
+uint32_t GetCurrentFrame();
+
 class VulkanBuffer
 {
 public:

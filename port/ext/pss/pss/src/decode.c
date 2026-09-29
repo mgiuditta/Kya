@@ -2,7 +2,9 @@
 #include <mpeg2.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifndef __APPLE__
 #include <libfmemopen.h>
+#endif
 #include <mpeg2convert.h>
 #include "pss.h"
 
