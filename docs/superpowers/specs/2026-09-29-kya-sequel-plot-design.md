@@ -87,3 +87,20 @@ Asset realmente nuovi: FX e ricolorazione dell'Ombra, indicatore di corruzione (
 - **Genitorialità di Frank**: va confermato nel gioco che Frank non è figlio di Alan. Se lo fosse, il suo ruolo di "immune" va rivisto (ad esempio: la stirpe si manifesta solo nella parte aliena).
 - **Madre di Kya e origine aliena**: da verificare cosa dice esattamente il primo gioco sull'origine "mezza aliena".
 - **Isola o Brazelia**: decidere se l'intero Atto I si svolge sull'isola o se l'isola è solo l'apertura.
+
+## Note di ricerca
+
+- **Finale alternativo del primo gioco: non esiste.** La community non ne ha mai visto uno ([forum](https://www.tapatalk.com/groups/kya_dark_lineage/is-there-an-alternate-ending-t264.html)). Nel codice, `UpdateForFreedWolfen` (`src/b-witch/Pause.cpp:2216`) alza un livello di sblocco bonus (`INT_0044982c`) a 200/220/240/260 Wolfen liberati. Lo stesso contatore può salire fino a 5 anche tramite cheat (`src/b-witch/Cheat.cpp:36`). Sblocca la galleria artwork, non cambia la trama.
+- **Fonti del canone**: [Wikipedia](https://en.wikipedia.org/wiki/Kya:_Dark_Lineage), [Giant Bomb](https://www.giantbomb.com/wd/3030-20351).
+- **Nel motore non c'è una trasformazione del giocatore in Wolfen.** Moveset e attori riutilizzabili sono elencati nella tabella di fattibilità.
+
+## Roadmap del capitolo giocabile
+
+Il capitolo giocabile non si può pianificare come un unico progetto. Gli strumenti esistenti sanno solo *estrarre* asset (KyaBank: BNK → file, G2D → PNG, G3D → glTF). Non esiste un tool che scriva o ricompatti un BNK, non c'è un editor di livelli e diversi formati sono ancora conosciuti solo in parte. Per questo il lavoro è diviso in sotto-progetti, ognuno con la sua spec e il suo piano:
+
+1. **Prototipo Ombra (solo codice)**: spec `2026-09-29-dark-power-prototype-design.md`, piano `docs/superpowers/plans/2026-09-29-dark-power-prototype.md`. **Stato: piano scritto, da eseguire su Windows** (build e test solo Windows).
+2. **Pipeline di modding**: scrittura e ricompattazione dei BNK, poi modifica del posizionamento degli attori in un livello esistente. È il prerequisito per qualunque contenuto nuovo. Non iniziato.
+3. **Testi e dialoghi**: capire il formato dei testi di gioco per aggiungere battute. Non iniziato.
+4. **L'isola e l'Atto I completo**: dipende da 2 e 3. Non iniziato.
+
+Prossimi passi, oltre al sotto-progetto 1: mettere sotto torchio la trama con la skill `grilling`, e usare `systemic-worldbuilding` (installata in `~/.claude/skills/`) per l'entità antica e il popolo dei carcerieri.
