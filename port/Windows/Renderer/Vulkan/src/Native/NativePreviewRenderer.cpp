@@ -114,15 +114,18 @@ namespace Renderer
 						continue;
 					}
 
-					vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, GetBlendPipeline(RenderPassKey::Empty, draw.pTexture->GetTextureRegisters().alpha, instance.pMesh->GetPrim().ABE));
+					const EColorWrite colorWrite = draw.bIsAfailZOnly ? EColorWrite::None : EColorWrite::RGBA;
+					vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, GetBlendPipeline(RenderPassKey::Empty, draw.pTexture->GetTextureRegisters().alpha, instance.pMesh->GetPrim().ABE, colorWrite));
 
 					PerDrawData previewPerDrawData = instance.perDrawData;
 					previewPerDrawData.projXView = previewProjXView;
 					vkCmdPushConstants(cmd, pipeline.layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PerDrawData), &previewPerDrawData);
 
-					const VkBool32 colorWriteEnable = draw.bIsAfailZOnly ? VK_FALSE : VK_TRUE;
-					vkCmdSetColorWriteEnableEXT(cmd, 1, &colorWriteEnable);
-					vkCmdSetColorWriteMaskEXT(cmd, 0, colorWriteMasks.size(), colorWriteMasks.data());
+					if (GetVulkanContext().bDynamicColorWrite) {
+						const VkBool32 colorWriteEnable = draw.bIsAfailZOnly ? VK_FALSE : VK_TRUE;
+						vkCmdSetColorWriteEnableEXT(cmd, 1, &colorWriteEnable);
+						vkCmdSetColorWriteMaskEXT(cmd, 0, colorWriteMasks.size(), colorWriteMasks.data());
+					}
 
 					vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.layout, 0, 1, draw.pDescriptorSets, 0, nullptr);
 					vkCmdDrawIndexed(cmd, static_cast<uint32_t>(instance.indexCount), 1, instance.indexStart, instance.vertexStart, 0);

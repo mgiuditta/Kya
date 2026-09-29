@@ -179,15 +179,27 @@ namespace Renderer
 			GetNativeRendererState().hasActiveRenderPass = false;
 		}
 
+		EColorWrite GetColorWrite(const Draw& drawCommand)
+		{
+			if (drawCommand.bIsAfailZOnly) {
+				return EColorWrite::None;
+			}
+
+			if (!drawCommand.frameBufferMaterial && drawCommand.pTexture->GetTextureRegisters().test.AFAIL == AFAIL_RGB_ONLY) {
+				// Enable only RGB channels (disable alpha write)
+				return EColorWrite::RGB;
+			}
+
+			return EColorWrite::RGBA;
+		}
+
 		void SetColorDepthDynamicState(const VkCommandBuffer& cmd, Draw& drawCommand)
 		{
-			VkBool32 colorWriteEnable = VK_TRUE;
 			VkBool32 depthWriteEnable = drawCommand.pTexture->GetTextureRegisters().test.AFAIL != AFAIL_FB_ONLY ? VK_TRUE : VK_FALSE;
 			if (drawCommand.frameBufferMaterial) depthWriteEnable = VK_TRUE;
 
 			if (drawCommand.bIsAfailZOnly) {
 				depthWriteEnable = VK_TRUE;
-				colorWriteEnable = VK_FALSE;
 			}
 
 			if (drawCommand.bIsZMask) {
@@ -198,21 +210,17 @@ namespace Renderer
 			vkCmdSetDepthWriteEnable(cmd, depthWriteEnable);
 			vkCmdSetDepthCompareOp(cmd, drawCommand.frameBufferMaterial ? VK_COMPARE_OP_GREATER_OR_EQUAL : VK_COMPARE_OP_GREATER);
 
-			// Color.
-			GetNativeRendererState().vkCmdSetColorWriteEnableEXT(cmd, 1, &colorWriteEnable);
-
-			std::array<VkBool32, 1> colorWriteMasks = {
-				VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
-			};
-
-			if (!drawCommand.frameBufferMaterial && drawCommand.pTexture->GetTextureRegisters().test.AFAIL == AFAIL_RGB_ONLY) {
-				// Enable only RGB channels (disable alpha write)
-				colorWriteMasks[0] = {
-					VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT
-				};
+			// Color. Without dynamic color write it is baked into the bound blend variant instead.
+			if (!GetVulkanContext().bDynamicColorWrite) {
+				return;
 			}
 
-			GetNativeRendererState().vkCmdSetColorWriteMaskEXT(cmd, 0, colorWriteMasks.size(), colorWriteMasks.data());
+			const EColorWrite colorWrite = GetColorWrite(drawCommand);
+			const VkBool32 colorWriteEnable = colorWrite != EColorWrite::None ? VK_TRUE : VK_FALSE;
+			GetNativeRendererState().vkCmdSetColorWriteEnableEXT(cmd, 1, &colorWriteEnable);
+
+			const VkColorComponentFlags colorWriteMask = colorWrite == EColorWrite::RGB ? GetColorWriteMask(EColorWrite::RGB) : GetColorWriteMask(EColorWrite::RGBA);
+			GetNativeRendererState().vkCmdSetColorWriteMaskEXT(cmd, 0, 1, &colorWriteMask);
 		}
 
         static bool TraceDraw(const Draw& draw, const Draw::Instance& instance, bool canRecord)
@@ -307,6 +315,7 @@ namespace Renderer
 					std::optional<uint> primState;
 					std::optional<bool> alphaBlendState;
 					std::optional<uint64_t> effectiveAlphaState;
+					const EColorWrite colorWrite = GetPipelineColorWrite(GetColorWrite(drawCommand));
 
 					if (pTexture->GetName() == DEBUG_TEXTURE_NAME) {
 						pTexture->GetName();
@@ -334,7 +343,9 @@ namespace Renderer
 						const bool bAlphaBlendEnabled = instance.pMesh->GetPrim().ABE || ((instance.perDrawData.renderFlags & 0x20) != 0);
 						if (bShadowReceiver || bShadowMask) {
 							if (!primState.has_value()) {
-								vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
+								// Blend off with RGBA is the stage's base pipeline.
+								const EColorWrite shadowColorWrite = bShadowMask ? colorWrite : EColorWrite::RGBA;
+								vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, shadowColorWrite == EColorWrite::RGBA ? pipeline.pipeline : GetBlendPipeline(currentRenderPassKey, {}, false, shadowColorWrite));
 								primState = instance.pMesh->GetPrim().CMD;
 							}
 						}
@@ -342,15 +353,17 @@ namespace Renderer
 							primState = instance.pMesh->GetPrim().CMD;
 							alphaBlendState = bAlphaBlendEnabled;
 							effectiveAlphaState = effectiveAlpha.CMD;
-							vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, GetBlendPipeline(currentRenderPassKey, effectiveAlpha, bAlphaBlendEnabled));
+							vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, GetBlendPipeline(currentRenderPassKey, effectiveAlpha, bAlphaBlendEnabled, colorWrite));
 						}
 
 						if (bShadowReceiver) {
 							vkCmdSetDepthWriteEnable(cmd, VK_FALSE);
-							VkBool32 colorWriteEnable = VK_TRUE;
-							GetNativeRendererState().vkCmdSetColorWriteEnableEXT(cmd, 1, &colorWriteEnable);
-							const VkColorComponentFlags colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-							GetNativeRendererState().vkCmdSetColorWriteMaskEXT(cmd, 0, 1, &colorWriteMask);
+							if (GetVulkanContext().bDynamicColorWrite) {
+								VkBool32 colorWriteEnable = VK_TRUE;
+								GetNativeRendererState().vkCmdSetColorWriteEnableEXT(cmd, 1, &colorWriteEnable);
+								const VkColorComponentFlags colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+								GetNativeRendererState().vkCmdSetColorWriteMaskEXT(cmd, 0, 1, &colorWriteMask);
+							}
 						}
 						else {
 							SetColorDepthDynamicState(cmd, drawCommand);

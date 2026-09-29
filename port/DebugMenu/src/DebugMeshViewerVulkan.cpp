@@ -307,19 +307,22 @@ void DebugMeshViewer::Vulkan::Render(const VkFramebuffer& framebuffer, const VkE
 
 	vkCmdSetDepthWriteEnable(cmd, true);
 
-	const VkBool32 colorWriteEnable = VK_TRUE;
+	// The pipeline bakes RGBA writes when the device has no dynamic color write.
+	if (Renderer::GetVulkanContext().bDynamicColorWrite) {
+		const VkBool32 colorWriteEnable = VK_TRUE;
 
-	static auto pvkCmdSetColorWriteEnableEXT = (PFN_vkCmdSetColorWriteEnableEXT)vkGetInstanceProcAddr(GetInstance(), "vkCmdSetColorWriteEnableEXT");
-	assert(pvkCmdSetColorWriteEnableEXT);
-	pvkCmdSetColorWriteEnableEXT(cmd, 1, &colorWriteEnable);
+		static auto pvkCmdSetColorWriteEnableEXT = (PFN_vkCmdSetColorWriteEnableEXT)vkGetInstanceProcAddr(GetInstance(), "vkCmdSetColorWriteEnableEXT");
+		assert(pvkCmdSetColorWriteEnableEXT);
+		pvkCmdSetColorWriteEnableEXT(cmd, 1, &colorWriteEnable);
 
-	std::array<VkBool32, 1> colorWriteMasks = {
-				VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
-	};
+		std::array<VkBool32, 1> colorWriteMasks = {
+					VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
+		};
 
-	static auto pvkCmdSetColorWriteMaskEXT = (PFN_vkCmdSetColorWriteMaskEXT)vkGetInstanceProcAddr(GetInstance(), "vkCmdSetColorWriteMaskEXT");
-	assert(pvkCmdSetColorWriteMaskEXT);
-	pvkCmdSetColorWriteMaskEXT(cmd, 0, colorWriteMasks.size(), colorWriteMasks.data());
+		static auto pvkCmdSetColorWriteMaskEXT = (PFN_vkCmdSetColorWriteMaskEXT)vkGetInstanceProcAddr(GetInstance(), "vkCmdSetColorWriteMaskEXT");
+		assert(pvkCmdSetColorWriteMaskEXT);
+		pvkCmdSetColorWriteMaskEXT(cmd, 0, colorWriteMasks.size(), colorWriteMasks.data());
+	}
 
 	gVertexConstantBuffer.Map(GetCurrentFrame());
 

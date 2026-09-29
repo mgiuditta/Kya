@@ -62,6 +62,7 @@ namespace Renderer
 			VkBlendFactor srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
 			VkBlendFactor dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 			VkBlendOp alphaBlendOp = VK_BLEND_OP_ADD;
+			VkColorComponentFlags colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 		};
 
 		using PipelineMap = std::unordered_map<size_t, Renderer::Pipeline>;

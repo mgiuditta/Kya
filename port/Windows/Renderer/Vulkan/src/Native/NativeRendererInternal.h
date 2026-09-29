@@ -340,7 +340,32 @@ namespace Renderer
 		const glm::mat4& GetInitialViewMatrix();
 		const glm::mat4& GetInitialProjMatrix();
 
-		VkPipeline GetBlendPipeline(const RenderPassKey& key, const GIFReg::GSAlpha& alpha, bool bAlphaBlendEnabled);
+		// Color write state per draw. Dynamic when the device supports it; otherwise part of the blend variant key.
+		enum class EColorWrite : uint8_t
+		{
+			RGBA,
+			RGB,
+			None,
+		};
+
+		inline VkColorComponentFlags GetColorWriteMask(EColorWrite colorWrite)
+		{
+			switch (colorWrite) {
+			case EColorWrite::RGB: return VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT;
+			case EColorWrite::None: return 0;
+			default: return VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+			}
+		}
+
+		// The write state to bake into a pipeline: always RGBA when it is set dynamically instead.
+		inline EColorWrite GetPipelineColorWrite(EColorWrite colorWrite)
+		{
+			return GetVulkanContext().bDynamicColorWrite ? EColorWrite::RGBA : colorWrite;
+		}
+
+		EColorWrite GetColorWrite(const Draw& drawCommand);
+
+		VkPipeline GetBlendPipeline(const RenderPassKey& key, const GIFReg::GSAlpha& alpha, bool bAlphaBlendEnabled, EColorWrite colorWrite = EColorWrite::RGBA);
 		void RecordBeginRenderPass(const RenderPassKey& key);
 		void RecordEndRenderPass();
 		void RecordBeginCommandBuffer();

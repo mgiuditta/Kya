@@ -133,12 +133,26 @@ namespace Renderer
 			}
 		}
 
-		static uint16_t GetBlendPipelineVariantKey(const ResolvedBlendState& blendState)
+		static uint16_t GetBlendPipelineVariantKey(const ResolvedBlendState& blendState, EColorWrite colorWrite)
 		{
-			return static_cast<uint16_t>(blendState.blendIndex | (blendState.colorBlendAttachment.blendEnable ? 0x100 : 0));
+			// Blend state is irrelevant without color writes, so all of those share one variant.
+			if (colorWrite == EColorWrite::None) {
+				return static_cast<uint16_t>(static_cast<uint16_t>(colorWrite) << 9);
+			}
+
+			return static_cast<uint16_t>(blendState.blendIndex | (blendState.colorBlendAttachment.blendEnable ? 0x100 : 0) | (static_cast<uint16_t>(colorWrite) << 9));
 		}
 
-		static VkPipeline CreateBlendPipeline(const RenderStage& stage, const ResolvedBlendState& blendState, const VkRenderPass& renderPass, const char* name)
+		// Color write enable and mask as dynamic state, when the device supports it.
+		static void AddColorWriteDynamicStates(std::vector<VkDynamicState>& dynamicStates)
+		{
+			if (GetVulkanContext().bDynamicColorWrite) {
+				dynamicStates.push_back(VK_DYNAMIC_STATE_COLOR_WRITE_ENABLE_EXT);
+				dynamicStates.push_back(VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT);
+			}
+		}
+
+		static VkPipeline CreateBlendPipeline(const RenderStage& stage, const ResolvedBlendState& blendState, EColorWrite colorWrite, const VkRenderPass& renderPass, const char* name)
 		{
 			const auto& createInfo = stage.gCreateInfo;
 			const auto& pipeline = stage.gPipeline;
@@ -187,6 +201,7 @@ namespace Renderer
 			multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
 			VkPipelineColorBlendAttachmentState colorBlendAttachment = blendState.colorBlendAttachment;
+			colorBlendAttachment.colorWriteMask = GetColorWriteMask(colorWrite);
 
 			VkPipelineColorBlendStateCreateInfo colorBlending{};
 			colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -204,9 +219,8 @@ namespace Renderer
 				VK_DYNAMIC_STATE_SCISSOR,
 				VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE,
 				VK_DYNAMIC_STATE_DEPTH_COMPARE_OP,
-				VK_DYNAMIC_STATE_COLOR_WRITE_ENABLE_EXT,
-				VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT,
 			};
+			AddColorWriteDynamicStates(dynamicStates);
 			VkPipelineDynamicStateCreateInfo dynamicState{};
 			dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 			dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
@@ -244,11 +258,12 @@ namespace Renderer
 			return blendPipeline;
 		}
 
-		VkPipeline GetBlendPipeline(const RenderPassKey& key, const GIFReg::GSAlpha& alpha, bool bAlphaBlendEnabled)
+		VkPipeline GetBlendPipeline(const RenderPassKey& key, const GIFReg::GSAlpha& alpha, bool bAlphaBlendEnabled, EColorWrite colorWrite)
 		{
 			RenderStage& stage = GetNativeRendererState().renderPass[key];
 			const ResolvedBlendState blendState = ResolveBlendState(alpha, bAlphaBlendEnabled);
-			const uint16_t blendKey = GetBlendPipelineVariantKey(blendState);
+			colorWrite = GetPipelineColorWrite(colorWrite);
+			const uint16_t blendKey = GetBlendPipelineVariantKey(blendState, colorWrite);
 
 			const auto it = stage.gBlendPipelines.find(blendKey);
 			if (it != stage.gBlendPipelines.end()) {
@@ -256,7 +271,7 @@ namespace Renderer
 			}
 
 			std::string pipelineName = stage.gPipeline.debugName + " Blend " + std::to_string(blendKey);
-			VkPipeline blendPipeline = CreateBlendPipeline(stage, blendState, stage.gRenderPass, pipelineName.c_str());
+			VkPipeline blendPipeline = CreateBlendPipeline(stage, blendState, colorWrite, stage.gRenderPass, pipelineName.c_str());
 			stage.gBlendPipelines.emplace(blendKey, blendPipeline);
 			return blendPipeline;
 		}
@@ -319,7 +334,7 @@ namespace Renderer
 			multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
 			VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-			colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+			colorBlendAttachment.colorWriteMask = state.colorWriteMask;
 			colorBlendAttachment.blendEnable = state.blendEnable;
 			colorBlendAttachment.srcColorBlendFactor = state.srcColorBlendFactor;
 			colorBlendAttachment.dstColorBlendFactor = state.dstColorBlendFactor;
@@ -344,9 +359,8 @@ namespace Renderer
 				VK_DYNAMIC_STATE_SCISSOR,
 				VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE,
 				VK_DYNAMIC_STATE_DEPTH_COMPARE_OP,
-				VK_DYNAMIC_STATE_COLOR_WRITE_ENABLE_EXT,
-				VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT,
 			};
+			AddColorWriteDynamicStates(dynamicStates);
 			VkPipelineDynamicStateCreateInfo dynamicState{};
 			dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 			dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
@@ -406,9 +420,11 @@ namespace Renderer
 		{
 			CheckBufferSizes();
 
-			GetNativeRendererState().vkCmdSetColorWriteEnableEXT = (PFN_vkCmdSetColorWriteEnableEXT)vkGetInstanceProcAddr(GetInstance(), "vkCmdSetColorWriteEnableEXT");
-			GetNativeRendererState().vkCmdSetColorWriteMaskEXT   = (PFN_vkCmdSetColorWriteMaskEXT)vkGetInstanceProcAddr(GetInstance(), "vkCmdSetColorWriteMaskEXT");
-			assert(GetNativeRendererState().vkCmdSetColorWriteEnableEXT && GetNativeRendererState().vkCmdSetColorWriteMaskEXT);
+			if (GetVulkanContext().bDynamicColorWrite) {
+				GetNativeRendererState().vkCmdSetColorWriteEnableEXT = (PFN_vkCmdSetColorWriteEnableEXT)vkGetInstanceProcAddr(GetInstance(), "vkCmdSetColorWriteEnableEXT");
+				GetNativeRendererState().vkCmdSetColorWriteMaskEXT   = (PFN_vkCmdSetColorWriteMaskEXT)vkGetInstanceProcAddr(GetInstance(), "vkCmdSetColorWriteMaskEXT");
+				assert(GetNativeRendererState().vkCmdSetColorWriteEnableEXT && GetNativeRendererState().vkCmdSetColorWriteMaskEXT);
+			}
 
 			RenderPassKey key;
 			key.clearMode = EClearMode::None;
