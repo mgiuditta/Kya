@@ -99,4 +99,4 @@ Rough size: device ~40 lines, sample voice ~60, music output ~70, stream voice ~
 - **Pitch clamp.** XAudio2 caps the ratio at 4.0 because of `CreateSourceVoice(..., 4.0f)`. miniaudio has no cap, so keep the same clamp in the adapter for parity.
 - **Callbacks.** miniaudio end callbacks run on the audio thread (manual §5). Keep the current polling model (`PollFinishedSamples`) and don't use them, which preserves the "no Eden objects cross into callbacks" rule.
 - **Optional later cleanup:** miniaudio also runs on Windows (WASAPI), so one backend could eventually serve both. That's the upstream maintainer's call and out of scope here. Windows stays on XAudio2.
-- Cutscene audio (`CBWCinSourceAudio`, `CinematicManager.cpp:6019-6060`) plays through `edSoundStream_*`, which is the same stream service,, so it needs no separate backend.
+- Cutscene audio (`CBWCinSourceAudio`, `CinematicManager.cpp:6019-6060`) plays through `edSoundStream_*`, which is the same stream service, so it needs no separate backend.
