@@ -63,7 +63,7 @@ Notes:
 
 - `enum LANGUAGE { GB, FR, GE, SP, IT, AUTO }` (src/b-witch/Types.h:696-704). Text file suffixes are `"GB","FR","GE","SP","IT"` (TranslatedTextData.cpp:100-106).
 - Cinematic audio uses **different** suffixes: `"US","FR","GER","SP","IT"` (src/b-witch/CinematicManager.cpp:1391-1393).
-- The default language comes from the PS2 system language in PAL mode, otherwise GB (src/b-witch/kya.cpp:1328-1395). On Windows `GetSystemLanguage` always returns English (:1326, :1362).
+- The default language comes from the PS2 system language in PAL mode, otherwise GB (src/b-witch/kya.cpp:1328-1395). On Windows `GetSystemLanguage` always returns English (:1327, :1363).
 - The in-game setting change goes through `CSettings` → `CMessageFile::set_default_language` → `CLanguageManager::ApplyLanguage` (src/b-witch/Settings.cpp:60-66). That runs `gMessageManager.reload()` (TranslatedTextData.cpp:344-358), which reselects every loaded file. For bank-backed files it looks up the other language's file **in the same bank**. So level and cinematic banks must contain all five language variants (inferred).
 - The intro FMVs pick a video file by a language letter plus an `s` suffix for subtitles, so their subtitles are burned into the video (kya.cpp:1815-1822).
 
