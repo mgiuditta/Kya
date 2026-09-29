@@ -702,7 +702,9 @@ int edSoundSampleFree(ed_sound_sample* pSoundSample)
 	goto LAB_002834b0;
 }
 
-uint _edSoundLastTransferIndex;
+// Separate from the int _edSoundLastTransferIndex in _edSysDataTransfer.cpp, as it has always been on
+// Windows (MSVC mangles the type into the name). Itanium mangling does not, so keep it file-local.
+static uint _edSoundLastTransferIndex;
 
 extern bool _edSoundAreAllSoundDataLoaded(uint lastIndex);
 

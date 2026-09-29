@@ -59,7 +59,12 @@ namespace Shader_Internal {
 		command += "-T " + configName + " ";
 		command += "-E " + entryPoint + " ";
 		command += "-Fo " + outputName + " ";
+#ifdef __APPLE__
+		// dxc 1.9 (Vulkan SDK 1.4.363) emits invalid source debug info for macros such as int12_to_float.
+		command += "-fspv-debug=vulkan" + std::string(" ");
+#else
 		command += "-fspv-debug=vulkan-with-source" + std::string(" ");
+#endif
 		command += arguments + " ";
 		command += "> shader_out.txt";
 
