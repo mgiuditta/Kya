@@ -84,9 +84,10 @@ Asset realmente nuovi: FX e ricolorazione dell'Ombra, indicatore di corruzione (
 
 ## Domande aperte
 
-- **Genitorialità di Frank**: va confermato nel gioco che Frank non è figlio di Alan. Se lo fosse, il suo ruolo di "immune" va rivisto (ad esempio: la stirpe si manifesta solo nella parte aliena).
-- **Madre di Kya e origine aliena**: da verificare cosa dice esattamente il primo gioco sull'origine "mezza aliena".
-- **Isola o Brazelia**: decidere se l'intero Atto I si svolge sull'isola o se l'isola è solo l'apertura.
+Chiuse dal grilling del 2026-09-29. Le decisioni sono in `2026-09-29-kya-sequel-systemic-worldbuilding.md`, sezione "Decisioni":
+- **Frank** è figlio della madre di Kya, non di Alan, quindi è immune.
+- **La madre di Kya** resta fuori dal sequel.
+- **L'Atto I** si svolge tutto sull'isola, un avamposto della Stirpe, e finisce con il salto nel portale verso Brazelia.
 
 ## Note di ricerca
 
@@ -104,3 +105,5 @@ Il capitolo giocabile non si può pianificare come un unico progetto. Gli strume
 4. **L'isola e l'Atto I completo**: dipende da 2 e 3. Non iniziato.
 
 Prossimi passi, oltre al sotto-progetto 1: mettere sotto torchio la trama con la skill `grilling`, e usare `systemic-worldbuilding` (installata in `~/.claude/skills/`) per l'entità antica e il popolo dei carcerieri.
+
+Worldbuilding sistemico di entità e carcerieri, con il vincolo "stessa resa grafica del primo gioco": `2026-09-29-kya-sequel-systemic-worldbuilding.md`.
