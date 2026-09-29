@@ -7,6 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Same guard as TextureUpload's Pcsx2Defs.h, which carries an identical shim.
+#ifndef MSVC_COMPAT_ALIGNED_MALLOC
+#define MSVC_COMPAT_ALIGNED_MALLOC
 inline void* _aligned_malloc(size_t size, size_t alignment)
 {
 	void* p = nullptr;
@@ -17,6 +20,7 @@ inline void _aligned_free(void* p)
 {
 	free(p);
 }
+#endif
 
 // All call sites pass an explicit buffer size, which matches snprintf's signature.
 #define sprintf_s snprintf
