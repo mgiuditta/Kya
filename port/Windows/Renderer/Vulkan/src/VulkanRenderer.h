@@ -57,6 +57,7 @@ namespace Renderer
 }
 
 VkDevice GetDevice();
+VkPipelineCache GetPipelineCache();
 VkFormat GetSwapchainImageFormat();
 std::vector<VkImage>& GetSwapchainImages();
 VkPhysicalDevice GetPhysicalDevice();

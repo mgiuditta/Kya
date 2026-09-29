@@ -258,7 +258,7 @@ void PS2::FrameBuffer::CreateFinalPassPipeline()
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-	if (vkCreateGraphicsPipelines(GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, GetAllocator(), &finalPipeline.pipeline) != VK_SUCCESS) {
+	if (vkCreateGraphicsPipelines(GetDevice(), GetPipelineCache(), 1, &pipelineInfo, GetAllocator(), &finalPipeline.pipeline) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create final pass graphics pipeline");
 	}
 

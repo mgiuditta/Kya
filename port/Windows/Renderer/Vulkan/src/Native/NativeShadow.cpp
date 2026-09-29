@@ -189,7 +189,7 @@ namespace Renderer::Native::Shadow
 			info.pDynamicState = &dynamicState;
 			info.layout = gBlurPipeline.layout;
 			info.renderPass = gBlurRenderPass;
-			if (vkCreateGraphicsPipelines(GetDevice(), VK_NULL_HANDLE, 1, &info, GetAllocator(), &gBlurPipeline.pipeline) != VK_SUCCESS) {
+			if (vkCreateGraphicsPipelines(GetDevice(), GetPipelineCache(), 1, &info, GetAllocator(), &gBlurPipeline.pipeline) != VK_SUCCESS) {
 				throw std::runtime_error("failed to create native shadow blur pipeline");
 			}
 			SetObjectName(reinterpret_cast<uint64_t>(gBlurPipeline.pipeline), VK_OBJECT_TYPE_PIPELINE, "Native Shadow Blur Pipeline");

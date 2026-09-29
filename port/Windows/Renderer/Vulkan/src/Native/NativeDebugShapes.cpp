@@ -469,7 +469,7 @@ namespace Renderer
 				pipelineInfo.subpass = 0;
 				pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-				if (vkCreateGraphicsPipelines(GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, GetAllocator(), &pipeline.pipeline) != VK_SUCCESS) {
+				if (vkCreateGraphicsPipelines(GetDevice(), GetPipelineCache(), 1, &pipelineInfo, GetAllocator(), &pipeline.pipeline) != VK_SUCCESS) {
 					throw std::runtime_error("failed to create debug line graphics pipeline!");
 				}
 
@@ -583,7 +583,7 @@ namespace Renderer
 				pipelineInfo.subpass = 0;
 				pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-				if (vkCreateGraphicsPipelines(GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, GetAllocator(), &pipeline.pipeline) != VK_SUCCESS) {
+				if (vkCreateGraphicsPipelines(GetDevice(), GetPipelineCache(), 1, &pipelineInfo, GetAllocator(), &pipeline.pipeline) != VK_SUCCESS) {
 					throw std::runtime_error("failed to create debug filled graphics pipeline!");
 				}
 

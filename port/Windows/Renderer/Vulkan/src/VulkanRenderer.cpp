@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <iterator>
 #include <stdexcept>
 #include <algorithm>
 #include <chrono>
@@ -67,6 +68,11 @@ const std::vector<const char*> instanceExtensions = {
 namespace Renderer {
 	bool gHeadless = false;
 }
+
+// Shared by pipeline creation and kept across runs. MoltenVK uses it to skip SPIR-V to MSL conversion;
+// the driver ignores data written by a different device or driver.
+static VkPipelineCache gPipelineCache = VK_NULL_HANDLE;
+static const char* gPipelineCacheFilename = "pipeline_cache.bin";
 
 void Renderer::CreateCommandBuffers(CommandBufferVector& commandBuffers, const char* name /*= nullptr*/) {
 	CreateCommandBuffers(GetCommandPool(), commandBuffers);
@@ -482,6 +488,7 @@ private:
 		createSurface();
 		pickPhysicalDevice();
 		createLogicalDevice();
+		createPipelineCache();
 		createSwapChain();
 		createImageViews();
 		createGlobalRenderPass();
@@ -490,6 +497,32 @@ private:
 		createSyncObjects();
 		commandPool = Renderer::CreateCommandPool("Image Renderer Command Pool");
 		context.commandPool = commandPool;
+	}
+
+	void createPipelineCache() {
+		std::vector<char> data;
+		std::ifstream input(gPipelineCacheFilename, std::ios::binary);
+		if (input) {
+			data.assign(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
+		}
+
+		VkPipelineCacheCreateInfo createInfo{ VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO };
+		createInfo.initialDataSize = data.size();
+		createInfo.pInitialData = data.empty() ? nullptr : data.data();
+		CheckVk(vkCreatePipelineCache(device, &createInfo, GetAllocator(), &gPipelineCache), "vkCreatePipelineCache");
+	}
+
+	void destroyPipelineCache() {
+		size_t size = 0;
+		if (vkGetPipelineCacheData(device, gPipelineCache, &size, nullptr) == VK_SUCCESS && size > 0) {
+			std::vector<char> data(size);
+			if (vkGetPipelineCacheData(device, gPipelineCache, &size, data.data()) == VK_SUCCESS) {
+				std::ofstream(gPipelineCacheFilename, std::ios::binary).write(data.data(), static_cast<std::streamsize>(size));
+			}
+		}
+
+		vkDestroyPipelineCache(device, gPipelineCache, GetAllocator());
+		gPipelineCache = VK_NULL_HANDLE;
 	}
 
 	void cleanupSwapChain() {
@@ -541,6 +574,7 @@ private:
 
 		vkDestroyCommandPool(device, commandPool, GetAllocator());
 
+		destroyPipelineCache();
 		vkDestroyDevice(device, GetAllocator());
 
 		if (enableValidationLayers) {
@@ -1362,6 +1396,11 @@ namespace Renderer
 VkDevice GetDevice()
 {
 	return Renderer::GetVulkanContext().device;
+}
+
+VkPipelineCache GetPipelineCache()
+{
+	return gPipelineCache;
 }
 
 VkFormat GetSwapchainImageFormat()
