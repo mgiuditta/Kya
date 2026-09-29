@@ -5806,7 +5806,8 @@ int CActorFighter::_SV_HIT_ProcessActorsCollisions(float damage, edF32VECTOR4* p
 	return uVar7;
 code_r0x0030b96c:
 	iVar6 = 0;
-	s_fighter_hit_exclusion* pCVar5 = pExclusionTable->aEntries;
+	s_fighter_hit_exclusion* pCVar5;
+	pCVar5 = pExclusionTable->aEntries;
 	if (0 < pExclusionTable->nbEntries) {
 		do {
 			local_18 = pCVar5->pActor;

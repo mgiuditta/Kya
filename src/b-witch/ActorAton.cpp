@@ -1886,9 +1886,11 @@ void CActorAton::BehaviourAtonEscape_Manage()
 
 		uVar12 = ((this->pathPlaneArray.GetCurPathPlane()->pathFollowReader).pPathFollow)->pathType;
 		if (uVar12 == 3) {
-			float fVar22 = pCVar8->currentLocation.x - this->currentLocation.x;
+			float fVar22;
+			fVar22 = pCVar8->currentLocation.x - this->currentLocation.x;
 			fVar23 = pCVar8->currentLocation.y - this->currentLocation.y;
-			float fVar26 = pCVar8->currentLocation.z - this->currentLocation.z;
+			float fVar26;
+			fVar26 = pCVar8->currentLocation.z - this->currentLocation.z;
 			if ((sqrtf(fVar22 * fVar22 + fVar23 * fVar23 + fVar26 * fVar26) < this->field_0x470) ||
 				(this->currentLocation.y <
 					CActorHero::_gThis->currentLocation.y)) {
@@ -4596,7 +4598,7 @@ LAB_003e26a8:
 		pCVar5->field_0x14 = 0.0f;
 	}
 
-	return;
+	return true;
 }
 
 void CBehaviourAddOnAton::ClearCinematic(int index)

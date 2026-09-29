@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <cassert>
 #include <string>
+#include "msvc_compat.h"
 #include "delegate.h"
 #include "GIFReg.h"
 #include "GSState.h"

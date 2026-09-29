@@ -38,7 +38,7 @@ PACK(
 	char header[4];
 	short field_0x4;
 	short field_0x6;
-#ifdef _WIN64
+#ifdef PLATFORM_WIN
 	int pSubData;
 #else
 	struct FontPacked_2C* pSubData;

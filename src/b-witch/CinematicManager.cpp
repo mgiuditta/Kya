@@ -6982,7 +6982,7 @@ bool CBWCinSunLight::OnFrameDirected()
 		this->field_0xb0 = true;
 	}
 
-	return;
+	return true;
 }
 
 bool CBWCinSunLight::Initialize()
@@ -7072,7 +7072,7 @@ bool CBWCinSpotLight::OnFrameDirected()
 		this->field_0xc0 = true;
 	}
 
-	return;
+	return true;
 }
 
 bool CBWCinSpotLight::Initialize()

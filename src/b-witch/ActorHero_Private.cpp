@@ -4174,9 +4174,12 @@ int CActorHeroPrivate::InterpretMessage(CActor* pSender, int msg, void* pMsgPara
 		}
 
 		if ((int)pMsgParam < 0) {
-			float magicValue = pMagicInterface->GetValue();
-			float magicValueTransit = pMagicInterface->GetTransit();
-			float magicValueMax = pMagicInterface->GetValueMax();
+			float magicValue;
+			magicValue = pMagicInterface->GetValue();
+			float magicValueTransit;
+			magicValueTransit = pMagicInterface->GetTransit();
+			float magicValueMax;
+			magicValueMax = pMagicInterface->GetValueMax();
 
 			if (magicValue + magicValueTransit < magicValueMax) {
 			LAB_00343180:
@@ -12401,7 +12404,7 @@ void CActorHeroPrivate::StateBoomyExecuteFightBlow()
 			}
 		}
 
-		pcVar4 = this->pBlow->field_0xd0;
+		pcVar4 = (void*)this->pBlow->field_0xd0;
 		if (pcVar4 != (void*)0x0) {
 			IMPLEMENTATION_GUARD(
 			(*pcVar4)(this, 1);)

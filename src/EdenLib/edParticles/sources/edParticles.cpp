@@ -142,32 +142,32 @@ void edPartGeneratorShapeSet(_ed_particle_generator_param* pParam, byte shape)
 	pParam->shape = shape;
 	switch (shape) {
 	case 1:
-		(pParam->speedFunc).pPosFunc = STORE_POINTER(edPartGenBoxPosition);
-		(pParam->posFunc).pPosFunc = STORE_POINTER(edPartGenBoxSpeed);
+		(pParam->speedFunc).pPosFunc = STORE_POINTER((void*)edPartGenBoxPosition);
+		(pParam->posFunc).pPosFunc = STORE_POINTER((void*)edPartGenBoxSpeed);
 		break;
 	case 2:
-		(pParam->speedFunc).pPosFunc = STORE_POINTER(edPartGenSpherePosition);
-		(pParam->posFunc).pPosFunc = STORE_POINTER(edPartGenSphereSpeed);
+		(pParam->speedFunc).pPosFunc = STORE_POINTER((void*)edPartGenSpherePosition);
+		(pParam->posFunc).pPosFunc = STORE_POINTER((void*)edPartGenSphereSpeed);
 		break;
 	case 3:
-		(pParam->speedFunc).pPosFunc = STORE_POINTER(edPartGenCylinderPosition);
-		(pParam->posFunc).pPosFunc = STORE_POINTER(edPartGenCylinderSpeed);
+		(pParam->speedFunc).pPosFunc = STORE_POINTER((void*)edPartGenCylinderPosition);
+		(pParam->posFunc).pPosFunc = STORE_POINTER((void*)edPartGenCylinderSpeed);
 		break;
 	case 4:
-		(pParam->speedFunc).pPosFunc = STORE_POINTER(edPartGenCylinderPosition);
-		(pParam->posFunc).pPosFunc = STORE_POINTER(edPartGenBoxSpeed);
+		(pParam->speedFunc).pPosFunc = STORE_POINTER((void*)edPartGenCylinderPosition);
+		(pParam->posFunc).pPosFunc = STORE_POINTER((void*)edPartGenBoxSpeed);
 		break;
 	case 5:
-		(pParam->speedFunc).pPosFunc = STORE_POINTER(edPartGenConePosition);
-		(pParam->posFunc).pPosFunc = STORE_POINTER(edPartGenConeSpeed);
+		(pParam->speedFunc).pPosFunc = STORE_POINTER((void*)edPartGenConePosition);
+		(pParam->posFunc).pPosFunc = STORE_POINTER((void*)edPartGenConeSpeed);
 		break;
 	case 6:
-		(pParam->speedFunc).pPosFunc = STORE_POINTER(edPartGenMeshePosition);
-		(pParam->posFunc).pPosFunc = STORE_POINTER(edPartGenZeroSpeed);
+		(pParam->speedFunc).pPosFunc = STORE_POINTER((void*)edPartGenMeshePosition);
+		(pParam->posFunc).pPosFunc = STORE_POINTER((void*)edPartGenZeroSpeed);
 		break;
 	case 8:
-		(pParam->speedFunc).pPosFunc = STORE_POINTER(edPartGenDotPosition);
-		(pParam->posFunc).pPosFunc = STORE_POINTER(edPartGenBoxSpeed);
+		(pParam->speedFunc).pPosFunc = STORE_POINTER((void*)edPartGenDotPosition);
+		(pParam->posFunc).pPosFunc = STORE_POINTER((void*)edPartGenBoxSpeed);
 	}
 
 	return;
@@ -759,8 +759,10 @@ void edPartGenNewPosAndSpeed(_ed_particle_generator_param* pGeneratorParam, edF3
 		fVar11 = GenRandomCentered01(pGeneratorParam);
 		fVar14 = GenRandomCentered01(pGeneratorParam) - 0.5f;
 
-		const float theta = fVar14 * M_PI;
-		const float phi = fVar11 * M_2_PI;
+		float theta;
+		theta = fVar14 * M_PI;
+		float phi;
+		phi = fVar11 * M_2_PI;
 
 		local_e0.x = cosf(phi) * cosf(theta);
 		local_e0.y = sinf(theta);

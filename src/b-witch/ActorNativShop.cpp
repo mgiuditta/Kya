@@ -1203,7 +1203,8 @@ void CBehaviourNativShopSell::State_Display()
 	if ((this->field_0x98 == 0) || (puVar5 = this->aSubObjs + this->selectedPurchaseItemIndex, puVar5->bCanPurchase == 0))
 		goto LAB_0036d578;
 
-	CInventoryInfo* pInventoryInfo = puVar5->streamRefActor.Get()->GetInventoryInfo();
+	CInventoryInfo* pInventoryInfo;
+	pInventoryInfo = puVar5->streamRefActor.Get()->GetInventoryInfo();
 
 	pReceiver = (this->pOwner->actorRef).Get();
 	if ((pCVar1->pressedBitfield & 0x1000000) != 0) {

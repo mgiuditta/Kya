@@ -483,7 +483,8 @@ LAB_001d84a8:
 		iVar11 = 6;
 	}
 
-	CFrontendEnemy* pEnemy = this->aEnemies + iVar13;
+	CFrontendEnemy* pEnemy;
+	pEnemy = this->aEnemies + iVar13;
 	iVar12 = pEnemy->state_0x37c;
 	if (iVar12 == FE_ENEMY_STATE_ACTIVE) {
 		pEnemy->MoveToNext(this->aSlots + iVar11);

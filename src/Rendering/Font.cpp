@@ -3,8 +3,8 @@
 #include <assert.h>
 
 #ifndef PLATFORM_PS2
-#include <corecrt_malloc.h>
-#include <corecrt_math.h>
+#include <stdlib.h>
+#include <math.h>
 #include "renderer.h"
 #else
 #include <math.h>

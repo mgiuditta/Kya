@@ -7,6 +7,12 @@
 #include "CameraViewManager.h"
 #include "List.h"
 
+// Declared in MathOps.h; needed here because the template bodies below are parsed before instantiation.
+void edF32Vector4SubHard(edF32VECTOR4* v0, edF32VECTOR4* v1, edF32VECTOR4* v2);
+float edF32Vector4DotProductHard(edF32VECTOR4* v0, edF32VECTOR4* v1);
+void edF32Matrix4MulF32Matrix4Hard(edF32MATRIX4* dst, edF32MATRIX4* m1, edF32MATRIX4* m2);
+void edF32Matrix4SetIdentityHard(edF32MATRIX4* m0);
+
 #define FX_TYPE_COMPOSITE 0
 #define FX_TYPE_PATH 1
 #define FX_TYPE_GROUP 2

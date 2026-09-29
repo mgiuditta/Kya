@@ -12,6 +12,9 @@
 #include "Vision.h"
 #include "Fx.h"
 
+// Declared in MathOps.h; needed here because the template bodies below are parsed before instantiation.
+void edF32Matrix4GetInverseOrthoHard(edF32MATRIX4* m0, edF32MATRIX4* m1);
+
 // <ACTOR_NAME>_BEHAVIOUR_<BEHAVIOUR_NAME>
 
 #define WOLFEN_BEHAVIOUR_WATCH_DOG 0x8

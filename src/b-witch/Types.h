@@ -7,7 +7,7 @@
 #endif
 
 #ifdef PLATFORM_WIN
-#define PACK( __Declaration__ ) __pragma( pack(push, 1) ) __Declaration__ __pragma( pack(pop))
+#define PACK( __Declaration__ ) _Pragma("pack(push, 1)") __Declaration__ _Pragma("pack(pop)")
 #endif
 
 #ifdef  PLATFORM_PS2
@@ -71,6 +71,10 @@ union Hash_4
 };
 
 #include <string>
+
+#ifdef PLATFORM_WIN
+#include "msvc_compat.h"
+#endif
 
 union Hash_8
 {
@@ -672,7 +676,7 @@ inline edF32MATRIX4 operator*(const edF32MATRIX4& lhs, const float& rhs)
 #include "Logging.h"
 
 #ifdef PLATFORM_WIN
-#define NAME_NEXT_OBJECT(format, ...) ObjectNaming::SetNextObjectName(format, __VA_ARGS__)
+#define NAME_NEXT_OBJECT(format, ...) ObjectNaming::SetNextObjectName(format, ##__VA_ARGS__)
 #else
 #define NAME_NEXT_OBJECT(...)
 #endif

@@ -2297,7 +2297,7 @@ int CBehaviourNativAkasa::FUN_003f1b90(int param_2)
 			bVar1 = true;
 		}
 		else {
-			if ((param_2 == 1) && (this->field_0x60.Set_0x1630(this->field_0x16b0) == false)) {
+			if ((param_2 == 1) && (this->field_0x60.Set_0x1630(this->field_0x16b0) == (NativSellerSubObjA*)0x0)) {
 				bVar1 = true;
 			}
 			else {
