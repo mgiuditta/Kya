@@ -18,6 +18,17 @@
 #include "edFile/edFileCRC32.h"
 #include "EdenLib/edFile/sources/ps2/WinSaveFile.h"
 
+#ifndef _WIN32
+#include <sys/stat.h>
+#include <ctime>
+
+// Same fields as the Win32 struct, so the backup list code stays shared.
+struct SYSTEMTIME
+{
+	unsigned short wYear, wMonth, wDayOfWeek, wDay, wHour, wMinute, wSecond, wMilliseconds;
+};
+#endif
+
 #include <chrono>
 #include <cmath>
 #include <cstring>
@@ -112,12 +123,26 @@ namespace Debug::SaveLoad
 
 		void ReadBackup(SaveBackup& backup, const std::filesystem::path& path)
 		{
+#ifdef _WIN32
 			WIN32_FILE_ATTRIBUTE_DATA attributes;
 			FILETIME localTime;
 			if (GetFileAttributesExW(path.c_str(), GetFileExInfoStandard, &attributes) &&
 				FileTimeToLocalFileTime(&attributes.ftLastWriteTime, &localTime)) {
 				FileTimeToSystemTime(&localTime, &backup.modified);
 			}
+#else
+			struct stat attributes;
+			std::tm localTime = {};
+			if (stat(path.c_str(), &attributes) == 0 && localtime_r(&attributes.st_mtime, &localTime)) {
+				backup.modified.wYear = static_cast<unsigned short>(localTime.tm_year + 1900);
+				backup.modified.wMonth = static_cast<unsigned short>(localTime.tm_mon + 1);
+				backup.modified.wDayOfWeek = static_cast<unsigned short>(localTime.tm_wday);
+				backup.modified.wDay = static_cast<unsigned short>(localTime.tm_mday);
+				backup.modified.wHour = static_cast<unsigned short>(localTime.tm_hour);
+				backup.modified.wMinute = static_cast<unsigned short>(localTime.tm_min);
+				backup.modified.wSecond = static_cast<unsigned short>(localTime.tm_sec);
+			}
+#endif
 			std::ifstream input(path, std::ios::binary | std::ios::ate);
 			const auto size = input.tellg();
 			constexpr size_t prefixSize = sizeof(SaveDataHeader) + sizeof(SaveDataDesc);

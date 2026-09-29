@@ -37,9 +37,21 @@ add_subdirectory("KyaTexture")
 add_subdirectory("KyaMesh")
 add_subdirectory("Sprite")
 
+# One file per OS with the same signatures.
+if (APPLE)
+	set(PLATFORM_SOURCES
+		"macOS/macos_impl.cpp"
+		"macOS/Input/gamepad_glfw.cpp"
+	)
+else()
+	set(PLATFORM_SOURCES
+		"Windows/windows_impl.cpp"
+		"Windows/Input/gamepad.cpp"
+	)
+endif()
+
 set(SOURCES 
-	"Windows/windows_impl.cpp"
-	"Windows/Input/gamepad.cpp"
+	${PLATFORM_SOURCES}
 	"src/object_naming.cpp"
 	"src/input_functions.cpp"
 	"include/port.h"
@@ -51,5 +63,9 @@ add_library(Port ${SOURCES})
 target_include_directories(Port PUBLIC "include")
 
 target_link_libraries(Port PUBLIC Renderer pss Tracy::TracyClient Texture Mesh Sprite Audio)
+
+if (APPLE)
+	target_link_libraries(Port PRIVATE glfw)
+endif()
 
 add_subdirectory(DebugMenu)

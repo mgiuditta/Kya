@@ -931,8 +931,13 @@ if (LOAD_FOREVER)
 	target_compile_definitions(Kya PUBLIC LOAD_FOREVER)
 endif()
 
-if (NOT PS2)
+if (APPLE)
+	add_subdirectory("port/macOS/Host")
+elseif (NOT PS2)
 	add_subdirectory("port/Windows/Host")
+endif()
+
+if (NOT PS2)
 	add_subdirectory("port/Test")
 endif()
 
