@@ -1,5 +1,7 @@
 #pragma once
+#include <algorithm>
 #include <cstdint>
+#include <iterator>
 #include <cassert>
 #include <string>
 #include "msvc_compat.h"
@@ -555,6 +557,44 @@ namespace Renderer
 		default:
 			__assume(0);
 		}
+	}
+
+	// CPU version of displaylist.geom for devices without geometry shaders: turns the sprite KickVertex just
+	// indexed (left-top, right-bottom) into two triangles with the right-bottom depth and color, as the GS does.
+	template<typename VertexType, typename IndexType>
+	void ExpandSpriteToQuad(PS2::DrawBufferData<VertexType, IndexType>& drawBuffer)
+	{
+		assert(drawBuffer.index.tail >= 2);
+		assert(drawBuffer.vertex.tail + 2 <= drawBuffer.vertex.maxcount);
+		assert(drawBuffer.index.tail + 4 <= drawBuffer.index.maxcount);
+
+		IndexType* pIndices = drawBuffer.index.buff + drawBuffer.index.tail - 2;
+		const IndexType lt = pIndices[0];
+		const IndexType rb = pIndices[1];
+
+		VertexType* pVertices = drawBuffer.vertex.buff;
+		pVertices[lt].XYZ[2] = pVertices[rb].XYZ[2];
+		std::copy(std::begin(pVertices[rb].RGBA), std::end(pVertices[rb].RGBA), std::begin(pVertices[lt].RGBA));
+
+		const IndexType lb = static_cast<IndexType>(drawBuffer.vertex.tail);
+		const IndexType rt = static_cast<IndexType>(lb + 1);
+
+		pVertices[lb] = pVertices[rb];
+		pVertices[lb].XYZ[0] = pVertices[lt].XYZ[0];
+		pVertices[lb].ST[0] = pVertices[lt].ST[0];
+
+		pVertices[rt] = pVertices[rb];
+		pVertices[rt].XYZ[1] = pVertices[lt].XYZ[1];
+		pVertices[rt].ST[1] = pVertices[lt].ST[1];
+
+		drawBuffer.vertex.tail += 2;
+		drawBuffer.vertex.xy_tail += 2;
+		drawBuffer.vertex.head = drawBuffer.vertex.next = drawBuffer.vertex.tail;
+
+		// Same triangles as the strip LT, LB, RT, RB. The last index must be the newest vertex (see DrawBufferData::Reset).
+		const IndexType quad[6] = { lt, lb, rt, lb, rb, rt };
+		std::copy(std::begin(quad), std::end(quad), pIndices);
+		drawBuffer.index.tail += 4;
 	}
 
 	void SetAlpha(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint8_t fix);

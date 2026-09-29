@@ -49,7 +49,9 @@ namespace Renderer::Native::DisplayList
 	{
 		DisplayListPipelineKey pipelineKey;
 		pipelineKey.options.bBoundTexture = gBoundTexture != nullptr;
-		pipelineKey.options.topology = (PS2::GetGSState().PRIM.PRIM == 6) ? topologyLineList : topologyTriangleList;
+		// Sprites are lines expanded by displaylist.geom, or quads expanded on the CPU without geometry shaders.
+		const bool bSpriteLines = PS2::GetGSState().PRIM.PRIM == GS_SPRITE && GetVulkanContext().bGeometryShader;
+		pipelineKey.options.topology = bSpriteLines ? topologyLineList : topologyTriangleList;
 
 		return pipelineKey;
 	}
@@ -413,7 +415,7 @@ namespace Renderer::Native::DisplayList
 			key.options.bBoundTexture = false;
 			CreatePipeline({ "shaders/displaylist.vert.spv" , "shaders/displaylistnotex.frag.spv", "", key });
 		}
-		{
+		if (GetVulkanContext().bGeometryShader) {
 			key.options.bBoundTexture = true;
 			key.options.topology = topologyLineList;
 			CreatePipeline({ "shaders/displaylist.vert.spv" , "shaders/displaylist.frag.spv", "shaders/displaylist.geom.spv", key });
@@ -592,7 +594,14 @@ void Renderer::DisplayList::SetVertex(float x, float y, float z, uint32_t skip)
 	vertex.XYZ[1] = newy;
 	vertex.XYZ[2] = z;
 
-	KickVertex<DisplayListVertex, uint16_t>(vertex, PS2::GetGSState().PRIM, skip, gVertexBuffers.GetDrawBufferData());
+	auto& drawBuffer = gVertexBuffers.GetDrawBufferData();
+	const size_t indexTail = drawBuffer.index.tail;
+
+	KickVertex<DisplayListVertex, uint16_t>(vertex, PS2::GetGSState().PRIM, skip, drawBuffer);
+
+	if (!GetVulkanContext().bGeometryShader && PS2::GetGSState().PRIM.PRIM == GS_SPRITE && drawBuffer.index.tail == indexTail + 2) {
+		ExpandSpriteToQuad(drawBuffer);
+	}
 }
 
 void Renderer::DisplayList::End2D()

@@ -50,6 +50,42 @@ int Add(int a, int b) {
 }
 
 // The test case
+TEST(DisplayListSprite, CpuExpansionMatchesGeometryShaderQuad)
+{
+	PS2::DrawBufferData<Renderer::DisplayListVertex, uint16_t> buffer;
+	buffer.Init(16, 16);
+
+	GIFReg::GSPrim prim{};
+	prim.PRIM = Renderer::GS_SPRITE;
+
+	Renderer::DisplayListVertex lt{};
+	lt.XYZ[0] = -1.0f; lt.XYZ[1] = -1.0f; lt.XYZ[2] = 0.25f;
+	lt.RGBA[0] = 10;
+
+	Renderer::DisplayListVertex rb{};
+	rb.XYZ[0] = 1.0f; rb.XYZ[1] = 1.0f; rb.XYZ[2] = 0.5f;
+	rb.ST[0] = 1.0f; rb.ST[1] = 1.0f;
+	rb.RGBA[0] = 99;
+
+	Renderer::KickVertex(lt, prim, 0, buffer);
+	Renderer::KickVertex(rb, prim, 0, buffer);
+	ASSERT_EQ(buffer.index.tail, 2u);
+
+	Renderer::ExpandSpriteToQuad(buffer);
+
+	const std::vector<uint16_t> indices(buffer.index.buff, buffer.index.buff + buffer.index.tail);
+	EXPECT_EQ(indices, (std::vector<uint16_t>{ 0, 2, 3, 2, 1, 3 }));
+	EXPECT_EQ(buffer.vertex.next, 4u);
+
+	const Renderer::DisplayListVertex* pVertices = buffer.vertex.buff;
+	EXPECT_EQ(pVertices[0].XYZ[2], 0.5f);
+	EXPECT_EQ(pVertices[0].RGBA[0], 99u);
+	EXPECT_EQ(pVertices[2].XYZ[0], -1.0f); EXPECT_EQ(pVertices[2].XYZ[1], 1.0f);
+	EXPECT_EQ(pVertices[2].ST[0], 0.0f); EXPECT_EQ(pVertices[2].ST[1], 1.0f);
+	EXPECT_EQ(pVertices[3].XYZ[0], 1.0f); EXPECT_EQ(pVertices[3].XYZ[1], -1.0f);
+	EXPECT_EQ(pVertices[3].ST[0], 1.0f); EXPECT_EQ(pVertices[3].ST[1], 0.0f);
+}
+
 TEST(AddTest, PositiveNumbers) {
 	// Test inputs and expected output
 	int a = 5;
