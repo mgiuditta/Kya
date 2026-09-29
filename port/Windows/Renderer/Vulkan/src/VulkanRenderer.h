@@ -33,6 +33,10 @@ namespace Renderer
 		uint32_t graphicsQueueFamily = 0;
 		VkCommandPool commandPool = VK_NULL_HANDLE;
 		VkAllocationCallbacks* allocator = nullptr;
+
+		// Optional device capabilities. Vulkan-on-Metal drivers (MoltenVK) lack both.
+		bool bGeometryShader = true;
+		bool bDynamicColorWrite = true; // VK_EXT_color_write_enable + EDS3 color write mask
 	};
 
 	struct SwapchainContext

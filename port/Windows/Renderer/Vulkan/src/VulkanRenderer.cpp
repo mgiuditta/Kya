@@ -48,13 +48,16 @@ const std::vector<const char*> deviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 	VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
 	VK_EXT_EXTENDED_DYNAMIC_STATE_2_EXTENSION_NAME,
-	VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME,
-	VK_EXT_COLOR_WRITE_ENABLE_EXTENSION_NAME,
 };
 
 // Optional extensions enabled when supported (e.g. for OBS Game Capture D3D11 interop)
 const std::vector<const char*> optionalDeviceExtensions = {
 	VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME,
+	// Dynamic color write; without them color write state is baked into pipeline variants.
+	VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME,
+	VK_EXT_COLOR_WRITE_ENABLE_EXTENSION_NAME,
+	// Must be enabled when a portability (Vulkan-on-Metal) driver advertises it.
+	"VK_KHR_portability_subset",
 };
 
 const std::vector<const char*> instanceExtensions = {
@@ -128,14 +131,9 @@ struct SwapChainSupportDetails {
 
 struct RequiredDeviceFeatures {
 	bool samplerAnisotropy = true;
-	bool geometryShader = true;
 	bool fillModeNonSolid = true;
 	bool dualSrcBlend = true;
 	bool synchronization2 = true;
-	bool colorWriteEnable = true;
-	bool extendedDynamicState3ColorBlendEnable = true;
-	bool extendedDynamicState3ColorBlendEquation = true;
-	bool extendedDynamicState3ColorWriteMask = true;
 };
 
 std::string JoinNames(const std::vector<const char*>& names)
@@ -166,13 +164,7 @@ std::string JoinStrings(const std::vector<std::string>& names)
 
 std::vector<const char*> CollectMissingRequiredDeviceFeatures(VkPhysicalDevice physicalDevice, const RequiredDeviceFeatures& required = {})
 {
-	VkPhysicalDeviceColorWriteEnableFeaturesEXT colorWriteFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COLOR_WRITE_ENABLE_FEATURES_EXT };
-
-	VkPhysicalDeviceExtendedDynamicState3FeaturesEXT extendedDynamicState3{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT };
-	extendedDynamicState3.pNext = &colorWriteFeatures;
-
 	VkPhysicalDeviceVulkan13Features deviceFeatures13{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
-	deviceFeatures13.pNext = &extendedDynamicState3;
 
 	VkPhysicalDeviceFeatures2 deviceFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
 	deviceFeatures.pNext = &deviceFeatures13;
@@ -181,14 +173,9 @@ std::vector<const char*> CollectMissingRequiredDeviceFeatures(VkPhysicalDevice p
 
 	std::vector<const char*> missing;
 	if (required.samplerAnisotropy && !deviceFeatures.features.samplerAnisotropy) missing.push_back("samplerAnisotropy");
-	if (required.geometryShader && !deviceFeatures.features.geometryShader) missing.push_back("geometryShader");
 	if (required.fillModeNonSolid && !deviceFeatures.features.fillModeNonSolid) missing.push_back("fillModeNonSolid");
 	if (required.dualSrcBlend && !deviceFeatures.features.dualSrcBlend) missing.push_back("dualSrcBlend");
 	if (required.synchronization2 && !deviceFeatures13.synchronization2) missing.push_back("synchronization2");
-	if (required.colorWriteEnable && !colorWriteFeatures.colorWriteEnable) missing.push_back("colorWriteEnable");
-	if (required.extendedDynamicState3ColorBlendEnable && !extendedDynamicState3.extendedDynamicState3ColorBlendEnable) missing.push_back("extendedDynamicState3ColorBlendEnable");
-	if (required.extendedDynamicState3ColorBlendEquation && !extendedDynamicState3.extendedDynamicState3ColorBlendEquation) missing.push_back("extendedDynamicState3ColorBlendEquation");
-	if (required.extendedDynamicState3ColorWriteMask && !extendedDynamicState3.extendedDynamicState3ColorWriteMask) missing.push_back("extendedDynamicState3ColorWriteMask");
 
 	return missing;
 }
@@ -611,6 +598,11 @@ private:
 		createInfo.pApplicationInfo = &appInfo;
 
 		auto extensions = getRequiredExtensions();
+#ifdef __APPLE__
+		// MoltenVK is a portability driver: the loader only lists it when asked to.
+		extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+		createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
 		createInfo.ppEnabledExtensionNames = extensions.data();
 
@@ -709,35 +701,6 @@ private:
 
 		ValidateRequiredDeviceFeatures(physicalDevice);
 
-		VkPhysicalDeviceColorWriteEnableFeaturesEXT colorWriteFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COLOR_WRITE_ENABLE_FEATURES_EXT };
-		colorWriteFeatures.colorWriteEnable = VK_TRUE;
-
-		VkPhysicalDeviceExtendedDynamicState3FeaturesEXT extendedDynamicState3{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT };
-		extendedDynamicState3.extendedDynamicState3ColorBlendEnable = VK_TRUE;
-		extendedDynamicState3.extendedDynamicState3ColorBlendEquation = VK_TRUE;
-		extendedDynamicState3.extendedDynamicState3ColorWriteMask = VK_TRUE;
-		extendedDynamicState3.pNext = &colorWriteFeatures;
-
-		VkPhysicalDeviceVulkan13Features deviceFeatures13{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
-		deviceFeatures13.synchronization2 = VK_TRUE;
-		deviceFeatures13.pNext = &extendedDynamicState3;
-
-		VkPhysicalDeviceFeatures2 deviceFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
-		deviceFeatures.features.samplerAnisotropy = VK_TRUE;
-		deviceFeatures.features.geometryShader = VK_TRUE;
-		deviceFeatures.features.fillModeNonSolid = VK_TRUE;
-		deviceFeatures.features.dualSrcBlend = VK_TRUE;
-
-		deviceFeatures.pNext = &deviceFeatures13;
-
-		VkDeviceCreateInfo createInfo{};
-		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
-		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
-		createInfo.pQueueCreateInfos = queueCreateInfos.data();
-
-		createInfo.pNext = &deviceFeatures;
-
 		// Collect optional extensions that are actually supported
 		std::vector<const char*> enabledExtensions = deviceExtensions;
 		{
@@ -755,6 +718,59 @@ private:
 				}
 			}
 		}
+
+		auto IsExtensionEnabled = [&enabledExtensions](const char* name) {
+			for (const char* ext : enabledExtensions) {
+				if (strcmp(ext, name) == 0) {
+					return true;
+				}
+			}
+			return false;
+		};
+
+		// Query the optional features; their structs may only be chained when the extension exists.
+		VkPhysicalDeviceColorWriteEnableFeaturesEXT supportedColorWrite{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COLOR_WRITE_ENABLE_FEATURES_EXT };
+		VkPhysicalDeviceExtendedDynamicState3FeaturesEXT supportedExtendedDynamicState3{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT };
+		const bool bHasColorWriteExtensions = IsExtensionEnabled(VK_EXT_COLOR_WRITE_ENABLE_EXTENSION_NAME) && IsExtensionEnabled(VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME);
+
+		VkPhysicalDeviceFeatures2 supportedFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+		if (bHasColorWriteExtensions) {
+			supportedExtendedDynamicState3.pNext = &supportedColorWrite;
+			supportedFeatures.pNext = &supportedExtendedDynamicState3;
+		}
+		vkGetPhysicalDeviceFeatures2(physicalDevice, &supportedFeatures);
+
+		context.bGeometryShader = supportedFeatures.features.geometryShader;
+		context.bDynamicColorWrite = bHasColorWriteExtensions && supportedColorWrite.colorWriteEnable && supportedExtendedDynamicState3.extendedDynamicState3ColorWriteMask;
+
+		VkPhysicalDeviceColorWriteEnableFeaturesEXT colorWriteFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COLOR_WRITE_ENABLE_FEATURES_EXT };
+		colorWriteFeatures.colorWriteEnable = VK_TRUE;
+
+		VkPhysicalDeviceExtendedDynamicState3FeaturesEXT extendedDynamicState3{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT };
+		extendedDynamicState3.extendedDynamicState3ColorWriteMask = VK_TRUE;
+		extendedDynamicState3.pNext = &colorWriteFeatures;
+
+		VkPhysicalDeviceVulkan13Features deviceFeatures13{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
+		deviceFeatures13.synchronization2 = VK_TRUE;
+		if (context.bDynamicColorWrite) {
+			deviceFeatures13.pNext = &extendedDynamicState3;
+		}
+
+		VkPhysicalDeviceFeatures2 deviceFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+		deviceFeatures.features.samplerAnisotropy = VK_TRUE;
+		deviceFeatures.features.geometryShader = context.bGeometryShader;
+		deviceFeatures.features.fillModeNonSolid = VK_TRUE;
+		deviceFeatures.features.dualSrcBlend = VK_TRUE;
+
+		deviceFeatures.pNext = &deviceFeatures13;
+
+		VkDeviceCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+		createInfo.pQueueCreateInfos = queueCreateInfos.data();
+
+		createInfo.pNext = &deviceFeatures;
 
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
 		createInfo.ppEnabledExtensionNames = enabledExtensions.data();

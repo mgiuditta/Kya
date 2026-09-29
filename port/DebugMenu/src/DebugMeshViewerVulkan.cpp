@@ -330,8 +330,6 @@ void DebugMeshViewer::Vulkan::Render(const VkFramebuffer& framebuffer, const VkE
 			break;
 		}
 
-		Renderer::Native::SetBlendingDynamicState(pTexture, Vulkan::pBoundMesh, cmd);
-
 		PreviewerVertexBuffer& vertexBuffer = drawCommand.second;
 
 		auto& bufferData = vertexBuffer.GetDrawBufferData();
