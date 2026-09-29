@@ -98,6 +98,44 @@
 					"copySourcesOptions": { "exclusionList": [ ".vs", ".git", "out", "bin" ] }
 				}
 			}
+		},
+		{
+			"name": "macos-base",
+			"description": "Target macOS on Apple Silicon with AppleClang. Needs the Vulkan SDK on the environment (source setup-env.sh).",
+			"hidden": true,
+			"generator": "Ninja",
+			"binaryDir": "${sourceDir}/out/build/${presetName}",
+			"installDir": "${sourceDir}/out/install/${presetName}",
+			"cacheVariables": {
+				"PS2": false,
+				"CMAKE_OSX_ARCHITECTURES": "arm64",
+				"CMAKE_C_COMPILER": "clang",
+				"CMAKE_CXX_COMPILER": "clang++"
+			},
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Darwin"
+			}
+		},
+		{
+			"name": "macos-debug",
+			"displayName": "macOS arm64 Debug",
+			"inherits": "macos-base",
+			"cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+		},
+		{
+			"name": "macos-debug-asan",
+			"displayName": "macOS arm64 Debug (AddressSanitizer)",
+			"inherits": "macos-debug",
+			"cacheVariables": { "ENABLE_ADDRESS_SANITIZER": "ON" },
+			"environment": { "ASAN_OPTIONS": "halt_on_error=0" }
+		},
+		{
+			"name": "macos-release",
+			"displayName": "macOS arm64 RelWithDebInfo",
+			"inherits": "macos-base",
+			"cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
 		}
 	]
 }

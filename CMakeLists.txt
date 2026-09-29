@@ -18,7 +18,7 @@ if(NOT DEFINED ENABLE_MEMORY_PROFILING)
 	set(ENABLE_MEMORY_PROFILING OFF CACHE BOOL "Enable memory profiling")
 endif()
 
-option(ENABLE_ADDRESS_SANITIZER "Enable AddressSanitizer on supported Windows Clang builds" OFF)
+option(ENABLE_ADDRESS_SANITIZER "Enable AddressSanitizer on supported Clang builds (Windows, macOS)" OFF)
 
 option(ENABLE_STRICT_FLOAT_CONVERSION_ERRORS "Treat implicit float conversions as build errors" ON)
 
@@ -31,8 +31,12 @@ endif()
 
 include("src/port/ispc/ispc.cmake")
 
-set(CMAKE_C_COMPILER "clang")
-set(CMAKE_CXX_COMPILER "clang")
+# On macOS the compiler comes from the preset (AppleClang): linking C++ through the plain
+# clang driver would not pull in libc++.
+if (NOT CMAKE_HOST_APPLE)
+	set(CMAKE_C_COMPILER "clang")
+	set(CMAKE_CXX_COMPILER "clang")
+endif()
 
 
 set (CMAKE_CXX_STANDARD 17)
@@ -74,13 +78,22 @@ if (PS2)
 
 	set(PLATFORM_BINARY_FOLDER "PS2")
 else()
-	message("Win Build")
+	if (APPLE)
+		message("Mac Build")
+		set(PLATFORM_BINARY_FOLDER "MAC")
+	else()
+		message("Win Build")
+		set(PLATFORM_BINARY_FOLDER "WIN")
+	endif()
 
 	if (ENABLE_ADDRESS_SANITIZER)
 		if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-			message(FATAL_ERROR "ENABLE_ADDRESS_SANITIZER currently requires the Windows Clang toolchain.")
+			message(FATAL_ERROR "ENABLE_ADDRESS_SANITIZER currently requires a Clang toolchain.")
 		endif()
+	endif()
 
+	# AppleClang links its ASan dylib and rpath itself; only Windows needs the runtime DLL located.
+	if (ENABLE_ADDRESS_SANITIZER AND WIN32)
 		execute_process(
 			COMMAND ${CMAKE_CXX_COMPILER} --print-runtime-dir
 			OUTPUT_VARIABLE CLANG_RUNTIME_DIR
@@ -94,6 +107,9 @@ else()
 		if (NOT EXISTS "${KYA_ASAN_RUNTIME_DLL}")
 			message(FATAL_ERROR "Could not find AddressSanitizer runtime DLL at ${KYA_ASAN_RUNTIME_DLL}")
 		endif()
+	endif()
+
+	if (ENABLE_ADDRESS_SANITIZER)
 
 		message(STATUS "Enabling AddressSanitizer")
 		add_compile_options(-fsanitize=address -fsanitize-recover=address -fno-omit-frame-pointer)
@@ -118,19 +134,24 @@ else()
 			$<$<CONFIG:Debug>:-fno-limit-debug-info>
 			$<$<CONFIG:Debug>:-fno-omit-frame-pointer>
 			$<$<CONFIG:Debug>:-fno-inline>
-			$<$<CONFIG:Debug>:-gcodeview>
 		)
-		add_link_options(
-			$<$<CONFIG:Debug>:-Xlinker>
-			$<$<CONFIG:Debug>:/DEBUG>
-		)
+		if (WIN32)
+			add_compile_options($<$<CONFIG:Debug>:-gcodeview>)
+			add_link_options(
+				$<$<CONFIG:Debug>:-Xlinker>
+				$<$<CONFIG:Debug>:/DEBUG>
+			)
+		endif()
 	endif()
 
 	enable_testing()
 
-	add_subdirectory("port")
+	if (APPLE)
+		# MSVC CRT names (_aligned_malloc, sprintf_s, __forceinline...) used across port/ and src/.
+		add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/port/include/msvc_compat.h>")
+	endif()
 
-	set(PLATFORM_BINARY_FOLDER "WIN")
+	add_subdirectory("port")
 endif()
 
 set(src_root "src")
@@ -802,10 +823,22 @@ else()
 	set(KYA_EXECUTABLE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/${PLATFORM_BINARY_FOLDER}")
 	message("Making Exe")
 
-	add_custom_target(sync_files
-		COMMAND ${CMAKE_COMMAND} -E echo "Syncing files using robocopy..."
-		COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/DoRobo" "${CMAKE_CURRENT_SOURCE_DIR}/assets/" "${CMAKE_CURRENT_SOURCE_DIR}/bin/${PLATFORM_BINARY_FOLDER}/"
-	)
+	if (CMAKE_HOST_WIN32)
+		add_custom_target(sync_files
+			COMMAND ${CMAKE_COMMAND} -E echo "Syncing files using robocopy..."
+			COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/DoRobo" "${CMAKE_CURRENT_SOURCE_DIR}/assets/" "${CMAKE_CURRENT_SOURCE_DIR}/bin/${PLATFORM_BINARY_FOLDER}/"
+		)
+	elseif (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets")
+		add_custom_target(sync_files
+			COMMAND ${CMAKE_COMMAND} -E make_directory "${KYA_EXECUTABLE_DIRECTORY}"
+			COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${CMAKE_CURRENT_SOURCE_DIR}/assets/" "${KYA_EXECUTABLE_DIRECTORY}/"
+		)
+	else()
+		# Like DoRobo, a missing assets/ folder never fails the build.
+		add_custom_target(sync_files
+			COMMAND ${CMAKE_COMMAND} -E echo "No assets/ folder, skipping asset sync."
+		)
+	endif()
 
 	add_dependencies(Kya sync_files)
 endif()
@@ -838,6 +871,13 @@ else()
 
 	# MathOps.h enables the PS2 trig macros only while compiling this library.
 	target_compile_definitions(Kya PRIVATE KYA_USE_PS2_TRIG)
+
+	if (APPLE)
+		# -fms-extensions keeps the decompiled pointer->int casts compiling with the same
+		# truncating meaning they have under clang-cl; -ffp-contract=off keeps float results
+		# identical to x86-64, which never fuses multiply-add.
+		target_compile_options(Kya PRIVATE -fms-extensions -ffp-contract=off)
+	endif()
 
 	if (ENABLE_STRICT_FLOAT_CONVERSION_ERRORS)
 		if (MSVC)

@@ -7,13 +7,16 @@ message(STATUS "Using google test root: ${GTEST_ROOT}")
 
 include(GoogleTest)
 
-add_executable(KyaPortTest "src/tests.cpp" "src/audio_sample_tests.cpp" "src/audio_music_tests.cpp" "src/windows_save_tests.cpp")
+add_executable(KyaPortTest "src/tests.cpp" "src/audio_sample_tests.cpp" "src/audio_music_tests.cpp")
+if (WIN32)
+	target_sources(KyaPortTest PRIVATE "src/windows_save_tests.cpp")
+endif()
 target_sources(KyaPortTest PRIVATE "src/draw_trace_tests.cpp")
 target_compile_features(KyaPortTest PRIVATE cxx_std_20)
 
 target_compile_definitions(KyaPortTest PRIVATE TEST_DATA_DIRECTORY="${CMAKE_CURRENT_LIST_DIR}/data/")
 
-if (ENABLE_ADDRESS_SANITIZER)
+if (ENABLE_ADDRESS_SANITIZER AND WIN32)
 	add_custom_command(TARGET KyaPortTest POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 			"${KYA_ASAN_RUNTIME_DLL}"

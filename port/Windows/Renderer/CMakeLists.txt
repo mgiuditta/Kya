@@ -194,8 +194,16 @@ target_include_directories(Renderer PRIVATE "Shaders/config")
 
 add_dependencies(Renderer Shaders)
 
-set(DXC_COMPILER "$ENV{VULKAN_SDK}/Bin/dxc.exe")
-set(SHADER_OUTPUT_FOLDER "${CMAKE_SOURCE_DIR}/bin/WIN/shaders")
+if (APPLE)
+	find_program(DXC_COMPILER dxc HINTS "$ENV{VULKAN_SDK}/bin")
+	if (NOT DXC_COMPILER)
+		# Only the DebugMenu mesh viewer runs dxc; keep a name so the define stays valid.
+		set(DXC_COMPILER "dxc")
+	endif()
+else()
+	set(DXC_COMPILER "$ENV{VULKAN_SDK}/Bin/dxc.exe")
+endif()
+set(SHADER_OUTPUT_FOLDER "${CMAKE_SOURCE_DIR}/bin/${PLATFORM_BINARY_FOLDER}/shaders")
 set( SHADER_SRC_DIR "${CMAKE_CURRENT_LIST_DIR}/Shaders/src/")
 
 

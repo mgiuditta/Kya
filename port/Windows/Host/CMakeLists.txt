@@ -3,7 +3,7 @@ project(Kya_Win)
 add_executable(Kya_Win "src/win_main.cpp")
 target_link_libraries(Kya_Win PRIVATE Kya DebugMenu)
 
-if (ENABLE_ADDRESS_SANITIZER)
+if (ENABLE_ADDRESS_SANITIZER AND WIN32)
 	add_custom_command(TARGET Kya_Win POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 			"${KYA_ASAN_RUNTIME_DLL}"

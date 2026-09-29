@@ -2,14 +2,21 @@ message("Beginning shader compile")
 
 include_directories("config")
 
-if (${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "AMD64")
+if (APPLE)
+	# FindVulkan (run by the Renderer before this directory) locates the SDK tools.
+	set(GLSL_VALIDATOR "${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE}")
+	# dxc is only run by the DebugMenu mesh viewer at runtime; the LunarG SDK ships it.
+	find_program(DXC_COMPILER dxc HINTS "$ENV{VULKAN_SDK}/bin")
+elseif (${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "AMD64")
 	set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/Bin/glslangValidator.exe")
 else()
 	set(GLSL_VALIDATOR "$ENV{VULKAN_SDK}/Bin32/glslangValidator.exe")
 endif()
 
-set(DXC_COMPILER "$ENV{VULKAN_SDK}/Bin/dxc.exe")
-set(SHADER_OUTPUT_FOLDER "${CMAKE_SOURCE_DIR}/bin/WIN/shaders")
+if (NOT APPLE)
+	set(DXC_COMPILER "$ENV{VULKAN_SDK}/Bin/dxc.exe")
+endif()
+set(SHADER_OUTPUT_FOLDER "${CMAKE_SOURCE_DIR}/bin/${PLATFORM_BINARY_FOLDER}/shaders")
 
 message("Cleaning output folder: ${CMAKE_CURRENT_SOURCE_DIR}")
 #file(REMOVE_RECURSE ${SHADER_OUTPUT_FOLDER})

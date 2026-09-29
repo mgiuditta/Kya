@@ -4,6 +4,13 @@ set(SOURCES
 	"hash.h" 
 )
 
+# Header-only: Apple's ar refuses to create an empty archive, so use an interface library there.
+if (APPLE)
+	add_library(${TargetName} INTERFACE)
+	target_include_directories(${TargetName} INTERFACE "${CMAKE_CURRENT_LIST_DIR}")
+	return()
+endif()
+
 add_library(${TargetName} ${SOURCES})
 
 set_target_properties(${TargetName} PROPERTIES LINKER_LANGUAGE CXX)

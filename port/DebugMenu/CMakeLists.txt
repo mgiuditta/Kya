@@ -128,7 +128,11 @@ add_subdirectory("ext/magic_enum")
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory("ext/json")
 
-target_link_libraries(${TargetName} PRIVATE Renderer Port Texture Log Kya Dbghelp.lib imgui Gizmo magic_enum nlohmann_json::nlohmann_json glm)
+target_link_libraries(${TargetName} PRIVATE Renderer Port Texture Log Kya imgui Gizmo magic_enum nlohmann_json::nlohmann_json glm)
+
+if (WIN32)
+	target_link_libraries(${TargetName} PRIVATE Dbghelp.lib)
+endif()
 
 if(ENABLE_GOOGLE_FONT_LOADER)
 	target_sources(${TargetName} PRIVATE "src/GoogleFontLoader.h" "src/GoogleFontLoader.cpp")
