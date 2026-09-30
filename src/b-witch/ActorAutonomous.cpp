@@ -1681,8 +1681,7 @@ void CActorAutonomous::SV_AUT_MoveTo_DynFence(CActorMovParamsOut* pParamsIn, CAc
 				this->field_0x340 = 0;
 			}
 			else {
-				// Where is vector_0x2f0 set?
-				IMPLEMENTATION_GUARD();
+				// field_0x2e8/vector_0x2f0 are the avoidance direction set alongside field_0x348 (see above).
 				if (this->field_0x340 == 0) {
 					if (0.0f < this->rotationQuat.x * this->vector_0x2f0 - this->field_0x2e8 * this->rotationQuat.z) {
 						this->field_0x340 = 1;
