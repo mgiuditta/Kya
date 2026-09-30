@@ -23,7 +23,12 @@
 #endif
 
 byte g_NetIsSetup_004893d0 = 0;
+#ifdef PLATFORM_WIN
+// The port presents at 60 Hz, so step the timer by the game's own 60 Hz frame time (0 selects it).
+int g_isNTSC = 0;
+#else
 int g_isNTSC = 1;
+#endif
 
 void _edSystemPrintf(int type, int eventID, char* format)
 {

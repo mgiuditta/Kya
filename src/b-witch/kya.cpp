@@ -983,6 +983,11 @@ void VideoReadConfig(CIniFile* file)
 		if ((bVar1 != false) && (videoFrequency == 0x3c)) {
 			isNTSC = 0;
 		}
+#ifdef PLATFORM_WIN
+		// The port presents at 60 Hz: use the game's PAL 60 Hz mode (SetFrequency = 60) so fades,
+		// texture animations and input analysers match the timer in EdSystem.cpp.
+		isNTSC = 0;
+#endif
 		gVideoConfig.screenWidth = 0x200;
 		gVideoConfig.field_0x8 = 0;
 		gVideoConfig.screenHeight = screenHeight;
