@@ -77,9 +77,18 @@ public:
 	static LogPtr asyncLog;
 	LogMap logs;
 
+	// Messages below this level are dropped before their arguments are evaluated (see MY_LOG_CATEGORY).
+	// Default Warning; override with KYA_LOG_LEVEL=veryverbose/verbose/info/warning/error or the debug menu.
+	static LogLevel minLevel;
+
+	static bool ShouldLog(const LogLevel level) { return level >= minLevel; }
+
 	template <typename... Args>
 	void AddLog(const LogLevel level, const std::string& category, const char* format, Args &&...args) {
-		
+		if (!ShouldLog(level)) {
+			return;
+		}
+
 		// Find the log for the specified category.
 		auto pLog = logs.find(category);
 

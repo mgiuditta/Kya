@@ -4,6 +4,8 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/include/spdlog/sinks/stdout_color_sinks.h"
 
+#include <cstdlib>
+#include <cstring>
 #include <fstream>
 
 static const std::string gLogPath = "logs/";
@@ -13,6 +15,23 @@ constexpr spdlog::level::level_enum gLogLevel = spdlog::level::trace;
 //LogPtr Log::asyncLog = spdlog::stdout_color_mt("console");
 //LogPtr Log::asyncLog = spdlog::basic_logger_mt<spdlog::async_factory>("async_file_logger", "logs/async_log.txt", true);
 LogPtr Log::asyncLog = spdlog::basic_logger_st("async_file_logger", "logs/async_log.txt", true);
+
+static LogLevel LoadMinLevelFromEnv()
+{
+	const char* pValue = std::getenv("KYA_LOG_LEVEL");
+	if (pValue != nullptr) {
+		for (int level = static_cast<int>(LogLevel::VeryVerbose); level < static_cast<int>(LogLevel::Max); ++level) {
+			static const char* const names[] = { "veryverbose", "verbose", "info", "warning", "error" };
+			if (strcmp(pValue, names[level]) == 0) {
+				return static_cast<LogLevel>(level);
+			}
+		}
+	}
+
+	return LogLevel::Warning;
+}
+
+LogLevel Log::minLevel = LoadMinLevelFromEnv();
 
 static inline void InitLog(LogPtr pLog) {
 	pLog->set_pattern("%v");

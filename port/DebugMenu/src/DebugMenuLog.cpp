@@ -128,7 +128,8 @@ namespace Debug {
 		for (int level = static_cast<int>(LogLevel::VeryVerbose); level < static_cast<int>(LogLevel::Max); ++level)
 		{
 			LogLevel logLevel = static_cast<LogLevel>(level);
-			if (ImGui::Selectable(LogLevelToString(logLevel).c_str())) {
+			if (ImGui::Selectable(LogLevelToString(logLevel).c_str(), Log::minLevel == logLevel)) {
+				Log::minLevel = logLevel;
 			}
 		}
 

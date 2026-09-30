@@ -9,12 +9,12 @@
 
 #ifdef ENABLE_MY_LOG
 #if defined(PLATFORM_WIN)
-#define scePrintf(format, ...) Log::GetInstance().AddLog(LogLevel::Info, "PS2", format, ##__VA_ARGS__)
-#define MY_LOG(format, ...) Log::GetInstance().AddLog(LogLevel::Info, "General", format, ##__VA_ARGS__)
+#define MY_LOG_CATEGORY(category, level, format, ...) do { if (Log::ShouldLog(level)) { Log::GetInstance().AddLog(level, category, format, ##__VA_ARGS__); } } while (0)
+#define scePrintf(format, ...) MY_LOG_CATEGORY("PS2", LogLevel::Info, format, ##__VA_ARGS__)
+#define MY_LOG(format, ...) MY_LOG_CATEGORY("General", LogLevel::Info, format, ##__VA_ARGS__)
 
 #define FLUSH_LOG(...) Log::GetInstance().ForceFlush()
 
-#define MY_LOG_CATEGORY(category, level, format, ...) Log::GetInstance().AddLog(level, category, format, ##__VA_ARGS__)
 
 #else
 #include <eekernel.h>
