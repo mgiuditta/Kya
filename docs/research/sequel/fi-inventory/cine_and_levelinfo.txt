@@ -1,0 +1,16 @@
+level 9 numCine 15
+CINE 0 file=CIN_30BIS_SC_42_CIN_30BIS_SC_42_SceneMontage.cin bankA=D12AD6A0.bnk bankB=8B3B0A74.bnk nbCinActors=0 nbLevelActors=2 flags4=0x4000651 uid=0xec2 end=16/-1/-1 trig=KIM refB=- zones=0/1124558/0 cfg=0:
+CINE 1 file=CIN_31BIS_SC_44_CIN_31BIS_SC_44_SceneMontage.cin bankA=2DC4612B.bnk bankB=584B38E.bnk nbCinActors=4 nbLevelActors=0 flags4=0x8000651 uid=0xea0 end=16/-1/-1 trig=KIM refB=- zones=0/1124558/0 cfg=0:
+CINE 2 file=CIN_29_SC_41_CIN_29_SC_41_SceneMontage.cin bankA=716BCB17.bnk bankB=20D491D8.bnk nbCinActors=22 nbLevelActors=3 flags4=0x806d1 uid=0xc7c end=16/-1/-1 trig=KIM refB=- zones=1124559/1124560/0 cfg=0:
+CINE 3 file=FRANK_ATTACK_prepare_launch2_SceneMontage.cin bankA=AF83C7DA.bnk bankB=5A25D850.bnk nbCinActors=6 nbLevelActors=0 flags4=0x2011 uid=0xe60 end=16/-1/-1 trig=KIM refB=- zones=0/1124561/0 cfg=0:
+CINE 4 file=FRANK_ATTACK_prepare_launch1_SceneMontage.cin bankA=45051AB8.bnk bankB=635D7510.bnk nbCinActors=7 nbLevelActors=0 flags4=0x2011 uid=0xe1b end=16/-1/-1 trig=KIM refB=- zones=0/1124561/0 cfg=0:
+CINE 5 file=CIN_KYA_DEATH_KYA_DEATH_SceneMontage.cin bankA=2DDAF421.bnk bankB=45A0162E.bnk nbCinActors=3 nbLevelActors=0 flags4=0x630 uid=0xf32 end=16/-1/-1 trig=KIM refB=- zones=0/0/0 cfg=0:
+CINE 6 file=FRANK_ATTACK_prepare_launch3_SceneMontage.cin bankA=40D1713B.bnk bankB=4D0DBC90.bnk nbCinActors=7 nbLevelActors=0 flags4=0x2011 uid=0xe94 end=16/-1/-1 trig=KIM refB=- zones=0/1124561/0 cfg=0:
+CINE 7 file=CIN_30_SC_42_CIN_30_SC_42_SceneMontage.cin bankA=AFB8A112.bnk bankB=99344613.bnk nbCinActors=13 nbLevelActors=3 flags4=0x806d1 uid=0xc7f end=16/-1/-1 trig=KIM refB=- zones=0/1124435/0 cfg=0:
+CINE 8 file=Airlift_To_Nativ_Cin_Montage_SceneMontage.cin bankA=896A9F24.bnk bankB=3820B94.bnk nbCinActors=2 nbLevelActors=0 flags4=0x70410 uid=0x597 end=16/-1/-1 trig=KIM refB=- zones=0/1124562/0 cfg=0:
+CINE 9 file=FRANK_ATTACK_prepare_launch1_short_SceneMontage.cin bankA=3D684903.bnk bankB=4959C086.bnk nbCinActors=7 nbLevelActors=0 flags4=0x2000 uid=0xe1d end=16/-1/-1 trig=KIM refB=- zones=0/1124561/0 cfg=0:
+CINE 10 file=BEGIN_LEVEL9_Begin_Level9_SceneMontage.cin bankA=8D495C5F.bnk bankB=9591B768.bnk nbCinActors=0 nbLevelActors=2 flags4=0xe51 uid=0xec6 end=16/-1/-1 trig=KIM refB=- zones=0/0/0 cfg=0:
+CINE 11 file=FRANK_ATTACK_prepare_launch3_short_SceneMontage.cin bankA=E453850C.bnk bankB=4A323ABC.bnk nbCinActors=7 nbLevelActors=0 flags4=0x2000 uid=0xe95 end=16/-1/-1 trig=KIM refB=- zones=0/1124561/0 cfg=0:
+CINE 12 file=FRANK_ATTACK_prepare_launch2_short_SceneMontage.cin bankA=6576E02B.bnk bankB=4B87C7A1.bnk nbCinActors=6 nbLevelActors=0 flags4=0x2000 uid=0xe61 end=16/-1/-1 trig=KIM refB=- zones=0/1124561/0 cfg=0:
+CINE 13 file=FRANCKSTAND_FranckStand_SceneMontage.cin bankA=4BE8D107.bnk bankB=B7DEF2DB.bnk nbCinActors=0 nbLevelActors=1 flags4=0x48 uid=0xec1 end=16/-1/-1 trig=KIM refB=- zones=0/1124558/0 cfg=0:
+CINE 14 file=Airlift_To_Airlift_Cin_Montage_SceneMontage.cin bankA=4BF682F7.bnk bankB=8B034B4A.bnk nbCinActors=2 nbLevelActors=0 flags4=0x70410 uid=0x5a3 end=16/-1/-1 trig=KIM refB=- zones=0/1124558/0 cfg=0:

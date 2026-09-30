@@ -8,6 +8,15 @@
 #include "ed3D.h"
 #include "Rendering/DisplayList.h"
 #include "LevelScheduler.h"
+#include "ActorCheckpointManager.h"
+#include "ActorHero.h"
+#include "ActorHero_Private.h"
+#include "ActorManager.h"
+#include "SectorManager.h"
+#include "WayPoint.h"
+#include <cstdio>
+#include "CinematicManager.h"
+#include "CameraViewManager.h"
 
 namespace Debug {
 	namespace Scene {
@@ -125,8 +134,144 @@ namespace Debug {
 			ImGui::End();
 		}
 
+		static int gHoldFrames = 0; static int gHoldSector = -1; static float gHold[3];
+		static void TmpCmdHook()
+		{
+			if (gHoldFrames > 0 && CActorHero::_gThis) {
+				gHoldFrames--;
+				edF32VECTOR4 pos = CActorHero::_gThis->currentLocation;
+				pos.x = gHold[0]; pos.y = gHold[1]; pos.z = gHold[2];
+				reinterpret_cast<CActorHeroPrivate*>(CActorHero::_gThis)->UpdatePosition(&pos, false);
+				if (CScene::ptable.g_SectorManager_00451670->baseSector.currentSectorID != gHoldSector) CScene::ptable.g_SectorManager_00451670->SwitchToSector(gHoldSector, false);
+				if (gHoldFrames == 60 || gHoldFrames == 0) {
+					CCameraManager* pCamMan = reinterpret_cast<CCameraManager*>(CScene::GetManager(MO_Camera));
+					CActorHeroPrivate* h = reinterpret_cast<CActorHeroPrivate*>(CActorHero::_gThis);
+					pCamMan->SetMainCamera(h->pMainCamera);
+					h->pMainCamera->SetTarget(h);
+					pCamMan->AlertCamera(2, (void*)1);
+				}
+			}
+			const char* kCmd = "/private/tmp/claude-501/-Users-matteo-dev-kya/682bc2f7-7a84-4467-ab12-be38ca6b7cbc/scratchpad/cmd.txt";
+			const char* kOut = "/private/tmp/claude-501/-Users-matteo-dev-kya/682bc2f7-7a84-4467-ab12-be38ca6b7cbc/scratchpad/cmd_out.txt";
+			FILE* f = fopen(kCmd, "r");
+			if (!f) return;
+			char line[256] = {};
+			fgets(line, sizeof(line), f);
+			fclose(f);
+			remove(kCmd);
+			FILE* o = fopen(kOut, "a");
+			auto* pAM = CScene::ptable.g_ActorManager_004516a4;
+			auto* pSM = CScene::ptable.g_SectorManager_00451670;
+			int n = 0; float x, y, z;
+			if (strncmp(line, "dump", 4) == 0) {
+				if (o && pSM) fprintf(o, "curSector %d level %d\n", pSM->baseSector.currentSectorID, CScene::ptable.g_LevelScheduleManager_00451660->currentLevelID);
+				if (o && CActorHero::_gThis) fprintf(o, "hero %.1f %.1f %.1f\n", CActorHero::_gThis->currentLocation.x, CActorHero::_gThis->currentLocation.y, CActorHero::_gThis->currentLocation.z);
+				for (int i = 0; pAM && i < pAM->nbActors; i++) {
+					CActor* a = pAM->aActors[i];
+					if (a && a->typeID == CHECKPOINT_MANAGER) {
+						auto* m = static_cast<CActorCheckpointManager*>(a);
+						for (int c = 0; c < m->checkpointCount; c++) {
+							CWayPoint* w = m->aCheckpoints[c].pWayPointA.Get();
+							if (o) fprintf(o, "cp %d sector %d flags 0x%x wp %.1f %.1f %.1f\n", c, m->aCheckpoints[c].sectorId, m->aCheckpoints[c].flags, w ? w->location.x : 0.f, w ? w->location.y : 0.f, w ? w->location.z : 0.f);
+						}
+					}
+				}
+			}
+			else if (strncmp(line, "cine", 4) == 0 && o) {
+				auto* cm = g_CinematicManager_0048efc;
+				fprintf(o, "level %d numCine %d\n", CScene::ptable.g_LevelScheduleManager_00451660->currentLevelID, cm->numCutscenes_0x8);
+				for (int i = 0; i < cm->numCutscenes_0x8; i++) {
+					CCinematic* c = cm->ppCinematicObjB_A[i];
+					if (!c) continue;
+					CActor* trig = c->triggerActorRef.Get();
+					CActor* rb = c->actorRefB.Get();
+					fprintf(o, "CINE %d file=%s bankA=%s bankB=%s nbCinActors=%d nbLevelActors=%d flags4=0x%x uid=0x%x end=%d/%d/%d trig=%s refB=%s zones=%d/%d/%d cfg=%d:",
+						i, c->fileName, c->pBankName_0x48, c->pBankName_0x50, c->nbTotalCinematicActors, c->nbTotalLevelActors, c->flags_0x4, c->uniqueIdentifier,
+						c->endLevelId, c->endElevatorId, c->endCutsceneId, trig ? trig->name : "-", rb ? rb->name : "-", c->zoneRefA.index, c->zoneRefB.index, c->zoneRefC.index, c->cineActorConfigCount);
+					for (int k = 0; k < c->cineActorConfigCount; k++) { CActor* a = c->aCineActorConfig[k].pActor.Get(); fprintf(o, " %s", a ? a->name : "?"); }
+					fprintf(o, "\n");
+				}
+			}
+			else if (strncmp(line, "linfo", 5) == 0 && o) {
+				auto* ls = CScene::ptable.g_LevelScheduleManager_00451660;
+				for (int L = 0; L < 16; L++) {
+					S_LEVEL_INFO& li = ls->aLevelInfo[L];
+					fprintf(o, "LEVEL %d maxSector %d maxElev %d sectors:", L, li.maxSectorId, li.maxElevatorId);
+					for (int k = 0; k <= li.maxSectorId && k < 30; k++) fprintf(o, " %d:%d", k, li.aSectorSubObj[k].bankSize);
+					fprintf(o, " | elev:");
+					for (int k = 0; k < li.maxElevatorId && k < 12; k++) {
+						CActor* t = (L == ls->currentLevelID) ? pAM->GetActorByHashcode(li.aSubSectorInfo[k].teleporterActorHashCode) : nullptr;
+						fprintf(o, " %d:0x%x(%s,sec%d,wolf%d)", k, li.aSubSectorInfo[k].teleporterActorHashCode, t ? t->name : "-", t ? t->sectorId : -9, li.aSubSectorInfo[k].nbMaxExorcisedWolfen);
+					}
+					fprintf(o, "\n");
+				}
+			}
+			else if (sscanf(line, "lvl %d %f", &n, &x) == 2) {
+				int e = (int)x;
+				EnqueueLevelManageTask([=]() { CScene::ptable.g_LevelScheduleManager_00451660->Level_Teleport(nullptr, n, e, -1, -1); });
+				if (o) fprintf(o, "lvl %d %d\n", n, e);
+			}
+			else if (sscanf(line, "cpsec %d", &n) == 1) {
+				CActorHeroPrivate* h = reinterpret_cast<CActorHeroPrivate*>(CActorHero::_gThis);
+				h->lastCheckPointSector = n; h->field_0xea0 = n;
+				h->ProcessDeath();
+				if (o) fprintf(o, "cpsec %d\n", n);
+			}
+			else if (sscanf(line, "start %d %f", &n, &x) == 2) {
+				auto* ls = CScene::ptable.g_LevelScheduleManager_00451660;
+				if (o) fprintf(o, "start L%d was %d -> %d\n", n, ls->aLevelInfo[n].sectorStartIndex, (int)x);
+				ls->aLevelInfo[n].sectorStartIndex = (int)x;
+			}
+			else if (sscanf(line, "go %d", &n) == 1) {
+				for (int i = 0; pAM && i < pAM->nbActors; i++) {
+					CActor* a = pAM->aActors[i];
+					if (a && a->typeID == CHECKPOINT_MANAGER) {
+						auto* m = static_cast<CActorCheckpointManager*>(a);
+						CWayPoint* w = m->aCheckpoints[n].pWayPointA.Get();
+						gHold[0] = w->location.x; gHold[1] = w->location.y + 1.0f; gHold[2] = w->location.z;
+						gHoldSector = m->aCheckpoints[n].sectorId; gHoldFrames = 240;
+						CActorHeroPrivate* h = reinterpret_cast<CActorHeroPrivate*>(CActorHero::_gThis);
+						h->lastCheckPointSector = gHoldSector; h->field_0xea0 = gHoldSector;
+						if (o) fprintf(o, "go cp %d sector %d\n", n, gHoldSector);
+						break;
+					}
+				}
+			}
+			else if (sscanf(line, "elev %d", &n) == 1) {
+				CScene::ptable.g_LevelScheduleManager_00451660->Level_Teleport(nullptr, CScene::ptable.g_LevelScheduleManager_00451660->currentLevelID, n, -1, -1);
+				if (o) fprintf(o, "elev %d\n", n);
+			}
+			else if (sscanf(line, "cp %d", &n) == 1) {
+				for (int i = 0; pAM && i < pAM->nbActors; i++) {
+					CActor* a = pAM->aActors[i];
+					if (a && a->typeID == CHECKPOINT_MANAGER) {
+						auto* m = static_cast<CActorCheckpointManager*>(a);
+						m->ActivateCheckpoint(n);
+						CActorHeroPrivate* h = reinterpret_cast<CActorHeroPrivate*>(CActorHero::_gThis);
+						if (o) fprintf(o, "hero lastCPsec %d ea0 %d -> %d\n", h->lastCheckPointSector, h->field_0xea0, m->aCheckpoints[n].sectorId);
+						h->lastCheckPointSector = m->aCheckpoints[n].sectorId;
+						h->ProcessDeath();
+						if (o) fprintf(o, "cp %d activated\n", n);
+						break;
+					}
+				}
+			}
+			else if (sscanf(line, "sector %d", &n) == 1) {
+				if (pSM) pSM->SwitchToSector(n, false);
+				if (o) fprintf(o, "switch sector %d\n", n);
+			}
+			else if (sscanf(line, "tp %f %f %f", &x, &y, &z) == 3) {
+				edF32VECTOR4 pos = CActorHero::_gThis->currentLocation;
+				pos.x = x; pos.y = y; pos.z = z;
+				reinterpret_cast<CActorHeroPrivate*>(CActorHero::_gThis)->UpdatePosition(&pos, false);
+				if (o) fprintf(o, "tp %.1f %.1f %.1f\n", x, y, z);
+			}
+			if (o) fclose(o);
+		}
+
 		void Update()
 		{
+			TmpCmdHook();
 			static bool bSuccesfullyLoaded = false;
 
 			if (!bSuccesfullyLoaded) {

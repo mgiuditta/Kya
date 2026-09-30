@@ -8,7 +8,7 @@
 class CActorElectrolla : public CActor {
 public:
 	CActorElectrolla(){
-		IMPLEMENTATION_GUARD_LOG()
+		//IMPLEMENTATION_GUARD_LOG()
 	}
 
 	virtual void Create(ByteCode* pByteCode);

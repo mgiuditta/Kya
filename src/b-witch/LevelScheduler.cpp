@@ -351,6 +351,8 @@ void CLevelScheduler::Level_FillRunInfo(int levelID, int elevatorID, int subsect
 		this->baseSectorIndex = pBSHD->sectorId;
 		SaveGame_CloseChunk();
 	}
+	{ FILE* tf = fopen("/private/tmp/claude-501/-Users-matteo-dev-kya/682bc2f7-7a84-4467-ab12-be38ca6b7cbc/scratchpad/forcesector.txt", "r");
+	  if (tf) { int fs = -1; if (fscanf(tf, "%d", &fs) == 1 && fs > 0) { this->baseSectorIndex = fs; pLevelInfo->sectorStartIndex = fs; } fclose(tf); } }
 
 	return;
 }

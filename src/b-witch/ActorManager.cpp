@@ -166,6 +166,8 @@ void CActorManager::Level_AddAll(ByteCode* pMemoryStream)
 		ACTOR_LOG(LogLevel::Info, "id: {0} type: 0x{1:x} ({1})", actorCount, (int)pActor->typeID);
 
 		pActor->Create(pMemoryStream);
+		{ FILE* tf = fopen("/private/tmp/claude-501/-Users-matteo-dev-kya/682bc2f7-7a84-4467-ab12-be38ca6b7cbc/scratchpad/actors.tsv", "a");
+		  if (tf) { fprintf(tf, "A\t%d\t0x%x\t%s\t%d\t%.2f\t%.2f\t%.2f\t0x%08x\n", actorIndex, actorType, pActor->name, pActor->sectorId, pActor->currentLocation.x, pActor->currentLocation.y, pActor->currentLocation.z, (unsigned)pActor->subObjA->hashCode); fclose(tf); } }
 
 		lastClass = pActor->typeID;
 
@@ -980,6 +982,8 @@ void CActorManager::Level_LoadClassesInfo(struct ByteCode* pMemoryStream)
 			const ACTOR_CLASS classId = static_cast<ACTOR_CLASS>(pMemoryStream->GetS32());
 			pClassInfo = &this->aClassInfo[classId];
 			pClassInfo->totalCount = pMemoryStream->GetS32();
+			{ FILE* tf = fopen("/private/tmp/claude-501/-Users-matteo-dev-kya/682bc2f7-7a84-4467-ab12-be38ca6b7cbc/scratchpad/actors.tsv", "a");
+			  if (tf) { fprintf(tf, "C\t0x%x\t%d\n", classId, pClassInfo->totalCount); fclose(tf); } }
 			pClassInfo->allocatedCount = 0;
 
 			if (pClassInfo->totalCount != 0) {

@@ -46,7 +46,7 @@ public:
 	static StateConfig _gStateCfg_BLA[12];
 
 	CActorBlazer(){
-		IMPLEMENTATION_GUARD_LOG()
+		//IMPLEMENTATION_GUARD_LOG()
 	}
 
 	virtual void Create(ByteCode* pByteCode);
