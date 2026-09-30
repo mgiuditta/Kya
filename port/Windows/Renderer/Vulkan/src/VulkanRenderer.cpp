@@ -809,13 +809,8 @@ private:
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
 		createInfo.ppEnabledExtensionNames = enabledExtensions.data();
 
-		if (enableValidationLayers) {
-			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-			createInfo.ppEnabledLayerNames = validationLayers.data();
-		}
-		else {
-			createInfo.enabledLayerCount = 0;
-		}
+		// Device layers are deprecated; validation comes from the instance layers.
+		createInfo.enabledLayerCount = 0;
 
 		CheckVk(vkCreateDevice(physicalDevice, &createInfo, GetAllocator(), &device), "vkCreateDevice");
 
@@ -973,14 +968,15 @@ public:
 		frameReady = false;
 		currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
+		// Wait for the GPU to finish work on this frame. Must happen before the close
+		// check too: the game keeps recording into this frame's command buffers.
+		CheckVk(vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX), "vkWaitForFences");
+
 		if (glfwWindowShouldClose(window)) {
 			return;
 		}
 
 		glfwPollEvents();
-
-		// Wait for the GPU to finish work on this frame
-		CheckVk(vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX), "vkWaitForFences");
 
 		VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &presentImageIndex);
 
