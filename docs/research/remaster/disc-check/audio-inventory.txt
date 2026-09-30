@@ -1,0 +1,85 @@
+
+## sfx_vag: 433 unique items, total 11.4 min
+| rate Hz | ch | count | total min |
+|---|---|---|---|
+| 22050 | 1 | 297 | 8.83 |
+| 11025 | 1 | 97 | 1.49 |
+| 44100 | 1 | 18 | 0.38 |
+| 16000 | 1 | 15 | 0.16 |
+| 11050 | 1 | 4 | 0.06 |
+| 5000 | 1 | 1 | 0.03 |
+| 18000 | 1 | 1 | 0.49 |
+
+## music_wave: 56 unique items, total 0.6 min
+| rate Hz | ch | count | total min |
+|---|---|---|---|
+| 32000 | 1 | 25 | 0.22 |
+| 44100 | 1 | 4 | 0.02 |
+| 21985 | 1 | 2 | 0.01 |
+| 22038 | 1 | 1 | 0.01 |
+| 22058 | 1 | 1 | 0.01 |
+| 22061 | 1 | 1 | 0.01 |
+| 22045 | 1 | 1 | 0.01 |
+| 44089 | 1 | 1 | 0.01 |
+| 43997 | 1 | 1 | 0.00 |
+| 42908 | 1 | 1 | 0.01 |
+| 14602 | 1 | 1 | 0.00 |
+| 14662 | 1 | 1 | 0.00 |
+| 21945 | 1 | 1 | 0.00 |
+| 22037 | 1 | 1 | 0.02 |
+| 22024 | 1 | 1 | 0.02 |
+| 21963 | 1 | 1 | 0.00 |
+| 22050 | 1 | 1 | 0.00 |
+| 44109 | 1 | 1 | 0.02 |
+| 44095 | 1 | 1 | 0.03 |
+| 21587 | 1 | 1 | 0.01 |
+| 44160 | 1 | 1 | 0.01 |
+| 44091 | 1 | 1 | 0.01 |
+| 20164 | 1 | 1 | 0.04 |
+| 24392 | 1 | 1 | 0.03 |
+| 20197 | 1 | 1 | 0.03 |
+| 44087 | 1 | 1 | 0.02 |
+| 44070 | 1 | 1 | 0.01 |
+| 44158 | 1 | 1 | 0.01 |
+
+## streamch_vag: 46 unique items, total 5.4 min
+| rate Hz | ch | count | total min |
+|---|---|---|---|
+| 22050 | 1 | 44 | 5.36 |
+| 11025 | 1 | 2 | 0.05 |
+
+## cine_mib: 1012 unique items, total 241.4 min
+| rate Hz | ch | count | total min |
+|---|---|---|---|
+| 22050 | 2 | 1010 | 236.53 |
+| 44100 | 2 | 2 | 4.89 |
+
+## pss_audio: 17 unique items, total 32.6 min
+| rate Hz | ch | count | total min |
+|---|---|---|---|
+| 48000 | 2 | 17 | 32.57 |
+
+MIB files without MIH record: 14 ['LEVEL/CREDITS/STREAM/3D5B755F.MIB', 'LEVEL/CREDITS/STREAM/A2C1AF6F.MIB', 'LEVEL/LEVEL_1/STREAM/CF3314B7.MIB', 'LEVEL/LEVEL_1/STREAM/FAA6982C.MIB', 'LEVEL/LEVEL_10/STREAM/B5CF834A.MIB', 'LEVEL/LEVEL_6/STREAM/26BF66E7.MIB', 'LEVEL/LEVEL_6/STREAM/475D1158.MIB', 'LEVEL/LEVEL_6/STREAM/7804601E.MIB', 'LEVEL/LEVEL_6/STREAM/C7FC1DD5.MIB', 'LEVEL/NATIV/STREAM/1AB7A5E7.MIB']
+
+MIB size == ch*blk*cnt for 1012 / 1012
+MIB interleave block sizes: Counter({12608: 1010, 25216: 2})
+MIB durations: min 1.00s median 6.00s max 195.12s
+
+PSS:
+{'file': 'MOVIES/ATARI_P.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 904192, 'dur': 4.709333333333333, 'substream': '0xa0', 'video': '640x512@25'}
+{'file': 'MOVIES/EDEN1_P.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 2319360, 'dur': 12.08, 'substream': '0xa0', 'video': '640x512@25'}
+{'file': 'MOVIES/EDEN2_P.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 1160192, 'dur': 6.042666666666666, 'substream': '0xa0', 'video': '640x512@25'}
+{'file': 'MOVIES/EDEN3_P.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 2327552, 'dur': 12.122666666666667, 'substream': '0xa0', 'video': '640x512@25'}
+{'file': 'MOVIES/EDEN4_P.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 1160192, 'dur': 6.042666666666666, 'substream': '0xa0', 'video': '640x512@25'}
+{'file': 'MOVIES/INT_PTF.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 30989312, 'dur': 161.40266666666668, 'substream': '0xa0', 'video': '640x384@25'}
+{'file': 'MOVIES/INT_PTFS.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 30989312, 'dur': 161.40266666666668, 'substream': '0xa0', 'video': '640x512@25'}
+{'file': 'MOVIES/INT_PTG.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 30989312, 'dur': 161.40266666666668, 'substream': '0xa0', 'video': '640x384@25'}
+{'file': 'MOVIES/INT_PTGS.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 30989312, 'dur': 161.40266666666668, 'substream': '0xa0', 'video': '640x512@25'}
+{'file': 'MOVIES/INT_PTI.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 30605312, 'dur': 159.40266666666668, 'substream': '0xa0', 'video': '640x384@25'}
+{'file': 'MOVIES/INT_PTIS.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 30989312, 'dur': 161.40266666666668, 'substream': '0xa0', 'video': '640x512@25'}
+{'file': 'MOVIES/INT_PTS.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 30605312, 'dur': 159.40266666666668, 'substream': '0xa0', 'video': '640x384@25'}
+{'file': 'MOVIES/INT_PTSS.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 30989312, 'dur': 161.40266666666668, 'substream': '0xa0', 'video': '640x512@25'}
+{'file': 'MOVIES/INT_PTU.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 30989312, 'dur': 161.40266666666668, 'substream': '0xa0', 'video': '640x384@25'}
+{'file': 'MOVIES/INT_PTUS.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 30989312, 'dur': 161.40266666666668, 'substream': '0xa0', 'video': '640x512@25'}
+{'file': 'MOVIES/PROMO_PT.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 37855232, 'dur': 197.16266666666667, 'substream': '0xa0', 'video': '640x512@25'}
+{'file': 'MOVIES/TEAS_PT.PSS', 'codec': 'PCM16LE', 'rate': 48000, 'ch': 2, 'interleave': 512, 'ssbd_bytes': 20321280, 'dur': 105.84, 'substream': '0xa0', 'video': '640x512@25'}
