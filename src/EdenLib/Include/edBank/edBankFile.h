@@ -93,4 +93,10 @@ int TreeInfo_OptimizeFilePath(char* outFileName, const char* inFileName);
 // Debug
 char* DebugFindFilePath(edCBankFileHeader* pBVar3, int inFileIndex);
 
+#ifdef PLATFORM_WIN
+// Loose-file mod override for bank entries (see port/include/mod_override.h).
+uint GetModBankEntrySize(edCBankFileHeader* pHeader, int fileIndex, uint originalSize);
+void ReleaseModBankEntries(edCBankFileHeader* pHeader);
+#endif
+
 #endif // _ED_BANK_FILE_H

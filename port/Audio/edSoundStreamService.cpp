@@ -2,6 +2,7 @@
 #include "edSoundDevice.h"
 
 #include "log.h"
+#include "../include/mod_override.h"
 
 #include <algorithm>
 #include <chrono>
@@ -293,6 +294,9 @@ std::vector<std::string> GetStreamPathCandidates(const char* path)
 	const std::string originalPath(path);
 	const std::string hostPath = GetHostStreamPath(originalPath);
 	std::vector<std::string> candidates;
+	const std::string modPath = ModOverridePath(hostPath.c_str());
+	if (!modPath.empty())
+		candidates.push_back(modPath);
 	candidates.push_back(originalPath);
 	if (hostPath != originalPath)
 		candidates.push_back(hostPath);
