@@ -877,6 +877,8 @@ else()
 		# truncating meaning they have under clang-cl; -ffp-contract=off keeps float results
 		# identical to x86-64, which never fuses multiply-add.
 		target_compile_options(Kya PRIVATE -fms-extensions -ffp-contract=off)
+		# Temporary: edFile symbols upstream hasn't pushed yet.
+		target_sources(Kya PRIVATE "port/macOS/edFileStubs.cpp")
 	endif()
 
 	if (ENABLE_STRICT_FLOAT_CONVERSION_ERRORS)

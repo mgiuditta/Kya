@@ -142,3 +142,8 @@ endif()
 
 target_include_directories(${TargetName} PUBLIC "include")
 target_include_directories(${TargetName} PRIVATE "src")
+
+if (APPLE)
+	# Temporary: WinSaveFile.h upstream hasn't pushed to edFile yet.
+	target_include_directories(${TargetName} PRIVATE "${CMAKE_SOURCE_DIR}/port/macOS/Shim")
+endif()
