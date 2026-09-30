@@ -1100,8 +1100,8 @@ void CLightManager::BuildActiveList()
 					shifted = shifted >> 0x38;
 					byte a = (byte)((shifted & 0xf) << 4);
 
-					local_8.a = local_4.a | 0x80;
-					local_8.b = (0xffffff0f & local_4.b) | a;
+					local_8.a = local_8.a | 0x80;
+					local_8.b = (0xffffff0f & local_8.b) | a;
 
 					(*ppSectorLights)->colour_0x4 = local_8;
 
@@ -1153,8 +1153,8 @@ void CLightManager::BuildActiveList()
 					shifted = shifted >> 0x38;
 					byte a = (byte)((shifted & 0xf) << 4);
 
-					local_8.a = local_4.a | 0x80;
-					local_8.b = (0xffffff0f & local_4.b) | a;
+					local_8.a = local_8.a | 0x80;
+					local_8.b = (0xffffff0f & local_8.b) | a;
 
 					(*ppSectorLights)->colour_0x4 = local_8;
 					LIGHT_MANAGER_LOG(LogLevel::VeryVerbose, "CLightManager::BuildActiveList C Set flags light: {} flags: {:x}", (*ppSectorLights)->referencedLightIndex, (*ppSectorLights)->colour_0x4.rgba);
