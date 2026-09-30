@@ -119,7 +119,10 @@ namespace Renderer
 		float4 f : COLOR1;
 	*/
 
-	struct alignas(32) GSVertexUnprocessed
+	// Unaligned 48-byte core shared by both vertex layouts. The normal vertex derives from
+	// it rather than from the aligned GSVertexUnprocessed so that normal sits at offset 48 on
+	// every ABI: MSVC reuses the aligned base's tail padding, Itanium (Apple clang) does not.
+	struct GSVertexUnprocessedCore
 	{
 		struct {
 			int32_t ST[2];
@@ -138,13 +141,22 @@ namespace Renderer
 		} XYZFlags;
 	};
 
-	struct alignas(32) GSVertexUnprocessedNormal : public GSVertexUnprocessed
+	struct alignas(32) GSVertexUnprocessed : public GSVertexUnprocessedCore
+	{
+	};
+
+	struct alignas(32) GSVertexUnprocessedNormal : public GSVertexUnprocessedCore
 	{
 		union Normal {
 			float fNormal[4];
 			int32_t iNormal[4];
 		} normal;
 	};
+
+	// The native pipelines use a 64-byte stride with the normal at location 5, offset 48.
+	static_assert(sizeof(GSVertexUnprocessed) == 64);
+	static_assert(sizeof(GSVertexUnprocessedNormal) == 64);
+	static_assert(offsetof(GSVertexUnprocessedNormal, normal) == 48);
 
 	struct alignas(32) GSVertex
 	{
