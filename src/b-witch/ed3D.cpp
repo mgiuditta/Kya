@@ -3444,6 +3444,8 @@ edpkt_data* ed3DFlushStripInit(edpkt_data* pPkt, edNODE* pNode, ulong mode)
 
 #ifdef PLATFORM_WIN
 		Renderer::StartAnimMatrix();
+		// Matrix pkts go to scratchpad only when gBackupPKT is set; otherwise they follow pTempPkt.
+		edpkt_data* pAnimMatrixPktStart = pNextPkt;
 #endif
 
 		// Push anim matrices.
@@ -3464,7 +3466,7 @@ edpkt_data* ed3DFlushStripInit(edpkt_data* pPkt, edNODE* pNode, ulong mode)
 
 #ifdef PLATFORM_WIN
 		ED3D_LOG(LogLevel::VeryVerbose, "ed3DFlushStripInit Processing anim matrix transfer pkts remainder: {}", maxAnimMatrixCount);
-		VU1Emu::UpdateMemory(SCRATCHPAD_ADDRESS(0x70000800), pNextPkt);
+		VU1Emu::UpdateMemory(pAnimMatrixPktStart, pNextPkt);
 #endif
 
 		if (gBackupPKT != (edpkt_data*)0x0) {
