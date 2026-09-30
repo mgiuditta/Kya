@@ -21,6 +21,10 @@ target_link_libraries(Audio PUBLIC Log)
 
 if(WIN32)
 	target_link_libraries(Audio PRIVATE XAudio2 ole32)
+elseif(APPLE)
+	target_sources(Audio PRIVATE edSoundDeviceMiniaudio.cpp)
+	target_include_directories(Audio PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../ext/miniaudio")
+	target_link_libraries(Audio PRIVATE "-framework CoreFoundation" "-framework CoreAudio" "-framework AudioToolbox")
 endif()
 
 add_executable(KyaMusicRender music_render.cpp)

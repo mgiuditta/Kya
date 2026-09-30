@@ -20,6 +20,10 @@
 #include <objbase.h>
 #endif
 
+#if defined(_WIN32) || defined(__APPLE__)
+#define AUDIO_STREAM_DEVICE 1
+#endif
+
 namespace Audio
 {
 namespace
@@ -39,10 +43,8 @@ struct Stream
 	std::uint64_t positionAtStart = 0;
 	std::vector<std::int16_t> samples;
 	std::uint32_t sampleRate = 0;
-
-#ifdef _WIN32
-	IXAudio2SourceVoice* sourceVoice = nullptr;
-#endif
+	// Declared after samples so the voice releases its buffer before PCM dies.
+	std::unique_ptr<StreamVoice> voice;
 };
 
 std::unordered_map<std::uint32_t, Stream> streams;
@@ -93,47 +95,111 @@ bool EnsureAudioDevice()
 	return true;
 }
 
-void DestroySourceVoice(Stream& stream)
+class XAudioStreamVoice final : public StreamVoice
 {
-	if (stream.sourceVoice == nullptr)
-		return;
+public:
+	IXAudio2SourceVoice* sourceVoice = nullptr;
+	const std::vector<std::int16_t>* samples = nullptr;
 
-	stream.sourceVoice->Stop(0);
-	stream.sourceVoice->FlushSourceBuffers();
-	stream.sourceVoice->DestroyVoice();
-	stream.sourceVoice = nullptr;
-}
+	~XAudioStreamVoice() override
+	{
+		if (sourceVoice == nullptr)
+			return;
 
-bool CreateSourceVoice(Stream& stream)
-{
-	if (stream.sourceVoice != nullptr)
+		sourceVoice->Stop(0);
+		sourceVoice->FlushSourceBuffers();
+		sourceVoice->DestroyVoice();
+	}
+	bool Start() override
+	{
+		XAUDIO2_VOICE_STATE state{};
+		sourceVoice->GetState(&state, 0);
+		if (state.BuffersQueued == 0) {
+			XAUDIO2_BUFFER buffer{};
+			buffer.AudioBytes = static_cast<UINT32>(samples->size() * sizeof(std::int16_t));
+			buffer.pAudioData = reinterpret_cast<const BYTE*>(samples->data());
+			const HRESULT result = sourceVoice->SubmitSourceBuffer(&buffer);
+			if (FAILED(result)) {
+				LogAudioError("SubmitSourceBuffer failed", result);
+				return false;
+			}
+		}
+
+		const HRESULT result = sourceVoice->Start(0);
+		if (FAILED(result)) {
+			LogAudioError("SourceVoice Start failed", result);
+			return false;
+		}
 		return true;
-	if (!EnsureAudioDevice() || stream.samples.empty() || stream.sampleRate == 0)
-		return false;
+	}
+	void Stop() override { sourceVoice->Stop(0); }
+	void Rewind() override
+	{
+		sourceVoice->Stop(0);
+		sourceVoice->FlushSourceBuffers();
+	}
+	bool SetVolume(float volume) override
+	{
+		const HRESULT result = sourceVoice->SetVolume(volume);
+		if (FAILED(result)) {
+			LogAudioError("SourceVoice SetVolume failed", result);
+			return false;
+		}
+		return true;
+	}
+	std::uint64_t GetFramesPlayed() override
+	{
+		XAUDIO2_VOICE_STATE state{};
+		sourceVoice->GetState(&state, 0);
+		return state.SamplesPlayed;
+	}
+	bool IsFinished() override
+	{
+		XAUDIO2_VOICE_STATE state{};
+		sourceVoice->GetState(&state, 0);
+		return state.BuffersQueued == 0 && state.SamplesPlayed >= samples->size();
+	}
+};
+
+std::unique_ptr<StreamVoice> CreateDeviceStreamVoice(const std::vector<std::int16_t>& samples, std::uint32_t channels,
+	std::uint32_t sampleRate, float volume)
+{
+	if (!EnsureAudioDevice())
+		return nullptr;
 
 	WAVEFORMATEX format{};
 	format.wFormatTag = WAVE_FORMAT_PCM;
-	format.nChannels = static_cast<WORD>(stream.info.channels);
-	format.nSamplesPerSec = stream.sampleRate;
+	format.nChannels = static_cast<WORD>(channels);
+	format.nSamplesPerSec = sampleRate;
 	format.wBitsPerSample = 16;
 	format.nBlockAlign = format.nChannels * format.wBitsPerSample / 8;
 	format.nAvgBytesPerSec = format.nSamplesPerSec * format.nBlockAlign;
 	format.cbSize = 0;
 
-	const HRESULT result = audioEngine->CreateSourceVoice(&stream.sourceVoice, &format);
+	auto voice = std::make_unique<XAudioStreamVoice>();
+	voice->samples = &samples;
+	const HRESULT result = audioEngine->CreateSourceVoice(&voice->sourceVoice, &format);
 	if (FAILED(result)) {
 		LogAudioError("CreateSourceVoice failed", result);
-		stream.sourceVoice = nullptr;
-		return false;
+		voice->sourceVoice = nullptr;
+		return nullptr;
 	}
 
-	const HRESULT volumeResult = stream.sourceVoice->SetVolume(stream.info.volume);
-	if (FAILED(volumeResult)) {
-		LogAudioError("SourceVoice SetVolume failed", volumeResult);
-		DestroySourceVoice(stream);
+	if (!voice->SetVolume(volume))
+		return nullptr;
+	return voice;
+}
+#endif
+
+#ifdef AUDIO_STREAM_DEVICE
+bool CreateStreamVoice(Stream& stream)
+{
+	if (stream.voice != nullptr)
+		return true;
+	if (stream.samples.empty() || stream.sampleRate == 0)
 		return false;
-	}
-	return true;
+	stream.voice = CreateDeviceStreamVoice(stream.samples, stream.info.channels, stream.sampleRate, stream.info.volume);
+	return stream.voice != nullptr;
 }
 #endif
 
@@ -244,13 +310,11 @@ std::vector<std::string> GetStreamPathCandidates(const char* path)
 
 std::uint64_t CurrentPosition(Stream& stream)
 {
-#ifdef _WIN32
-	if (stream.sourceVoice != nullptr && !stream.samples.empty()) {
-		XAUDIO2_VOICE_STATE state{};
-		stream.sourceVoice->GetState(&state, 0);
-		if (state.BuffersQueued == 0 && state.SamplesPlayed >= stream.samples.size())
+#ifdef AUDIO_STREAM_DEVICE
+	if (stream.voice != nullptr && !stream.samples.empty()) {
+		if (stream.voice->IsFinished())
 			stream.info.playing = false;
-		return state.SamplesPlayed * VagBytesPerBlock / VagSamplesPerBlock;
+		return stream.voice->GetFramesPlayed() * VagBytesPerBlock / VagSamplesPerBlock;
 	}
 #endif
 
@@ -355,9 +419,7 @@ bool DecodeMib(const std::uint8_t* data, std::size_t size, std::uint32_t channel
 void RegisterStream(std::uint32_t streamId, std::uint32_t blockSize, float sampleRate, std::uint32_t channels)
 {
 	Stream& stream = streams[streamId];
-#ifdef _WIN32
-	DestroySourceVoice(stream);
-#endif
+	stream.voice.reset();
 	stream.info.ready = true;
 	stream.info.playing = false;
 	stream.info.blockSize = blockSize;
@@ -413,9 +475,7 @@ bool LoadStream(std::uint32_t streamId, const char* path)
 		return false;
 	}
 
-#ifdef _WIN32
-	DestroySourceVoice(stream);
-#endif
+	stream.voice.reset();
 	stream.samples = std::move(samples);
 	stream.sampleRate = sampleRate;
 	stream.info.sampleRate = sampleRate;
@@ -432,12 +492,8 @@ void PrepareStream(std::uint32_t streamId)
 		return;
 
 	Stream& stream = it->second;
-#ifdef _WIN32
-	if (stream.sourceVoice != nullptr) {
-		stream.sourceVoice->Stop(0);
-		stream.sourceVoice->FlushSourceBuffers();
-	}
-#endif
+	if (stream.voice != nullptr)
+		stream.voice->Rewind();
 	stream.info.position = 0;
 	stream.info.playing = false;
 	stream.positionAtStart = 0;
@@ -450,29 +506,10 @@ bool StartStream(std::uint32_t streamId)
 		return false;
 
 	Stream& stream = it->second;
-#ifdef _WIN32
+#ifdef AUDIO_STREAM_DEVICE
 	if (!stream.samples.empty()) {
-		if (!CreateSourceVoice(stream))
+		if (!CreateStreamVoice(stream) || !stream.voice->Start())
 			return false;
-
-		XAUDIO2_VOICE_STATE state{};
-		stream.sourceVoice->GetState(&state, 0);
-		if (state.BuffersQueued == 0) {
-			XAUDIO2_BUFFER buffer{};
-			buffer.AudioBytes = static_cast<UINT32>(stream.samples.size() * sizeof(std::int16_t));
-			buffer.pAudioData = reinterpret_cast<const BYTE*>(stream.samples.data());
-			const HRESULT result = stream.sourceVoice->SubmitSourceBuffer(&buffer);
-			if (FAILED(result)) {
-				LogAudioError("SubmitSourceBuffer failed", result);
-				return false;
-			}
-		}
-
-		const HRESULT result = stream.sourceVoice->Start(0);
-		if (FAILED(result)) {
-			LogAudioError("SourceVoice Start failed", result);
-			return false;
-		}
 		stream.info.playing = true;
 		return true;
 	}
@@ -491,15 +528,8 @@ bool SetStreamVolume(std::uint32_t streamId, float volume)
 	if (it == streams.end()) return false;
 	volume = std::isfinite(volume) ? std::clamp(volume, 0.0f, 1.0f) : 0.0f;
 	auto& stream = it->second;
-#ifdef _WIN32
-	if (stream.sourceVoice) {
-		const HRESULT result = stream.sourceVoice->SetVolume(volume);
-		if (FAILED(result)) {
-			LogAudioError("SourceVoice SetVolume failed", result);
-			return false;
-		}
-	}
-#endif
+	if (stream.voice && !stream.voice->SetVolume(volume))
+		return false;
 	stream.info.volume = volume;
 	return true;
 }
@@ -512,10 +542,8 @@ bool StopStream(std::uint32_t streamId)
 
 	Stream& stream = it->second;
 	stream.info.position = CurrentPosition(stream);
-#ifdef _WIN32
-	if (stream.sourceVoice != nullptr)
-		stream.sourceVoice->Stop(0);
-#endif
+	if (stream.voice != nullptr)
+		stream.voice->Stop();
 	stream.positionAtStart = stream.info.position;
 	stream.info.playing = false;
 	return true;
@@ -538,19 +566,12 @@ bool UnregisterStream(std::uint32_t streamId)
 	auto it = streams.find(streamId);
 	if (it == streams.end())
 		return false;
-#ifdef _WIN32
-	DestroySourceVoice(it->second);
-#endif
 	streams.erase(it);
 	return true;
 }
 
 void ResetStreams()
 {
-#ifdef _WIN32
-	for (auto& [streamId, stream] : streams)
-		DestroySourceVoice(stream);
-#endif
 	streams.clear();
 }
 

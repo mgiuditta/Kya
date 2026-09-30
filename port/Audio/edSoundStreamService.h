@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace Audio
@@ -15,6 +16,22 @@ struct StreamInfo
 	std::uint32_t channels = 1;
 	std::uint32_t sampleRate = 0;
 	std::uint64_t position = 0;
+};
+
+// Plays one fully decoded stream buffer that the service keeps alive until the
+// voice is destroyed. All calls, including polling, run on the game thread.
+class StreamVoice
+{
+public:
+	virtual ~StreamVoice() = default;
+	// Plays from the start again if the buffer has finished.
+	virtual bool Start() = 0;
+	virtual void Stop() = 0;
+	// Stops and drops playback progress so the next Start plays from the beginning.
+	virtual void Rewind() = 0;
+	virtual bool SetVolume(float volume) = 0;
+	virtual std::uint64_t GetFramesPlayed() = 0;
+	virtual bool IsFinished() = 0;
 };
 
 void RegisterStream(std::uint32_t streamId, std::uint32_t blockSize, float sampleRate, std::uint32_t channels = 1);

@@ -117,7 +117,7 @@ void Shutdown()
 {
 	Reset();
 	ResetStreams();
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
 	ShutdownAudioDevice();
 #endif
 }

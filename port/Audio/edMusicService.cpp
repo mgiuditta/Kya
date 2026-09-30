@@ -101,6 +101,8 @@ bool Prepare(Stream& stream)
 		auto output = std::make_unique<XAudioMusicOutput>();
 		if (output->Initialize()) stream.output = std::move(output);
 	}
+#elif defined(__APPLE__)
+	else stream.output = CreateDeviceMusicOutput();
 #endif
 	return stream.output != nullptr;
 }

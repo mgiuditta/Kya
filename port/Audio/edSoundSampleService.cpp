@@ -107,6 +107,8 @@ std::unique_ptr<SampleVoice> CreateVoice(const DecodedSample& sample)
 	buffer.LoopCount = sample.loopLength ? XAUDIO2_LOOP_INFINITE : 0;
 	if (FAILED(result->voice->SubmitSourceBuffer(&buffer))) return nullptr;
 	return result;
+#elif defined(__APPLE__)
+	return CreateDeviceSampleVoice(sample);
 #else
 	return nullptr;
 #endif
