@@ -1,4 +1,4 @@
-# Forgotten Island inventory: progress (stopped 2026-09-30)
+# Forgotten Island inventory: progress (resumed and finished 2026-10-05)
 
 Fact-finding for "Map Act I beats onto Forgotten Island" (issue 31). Stopped by the user partway through. This folder holds everything the agent had found.
 
@@ -36,6 +36,6 @@ Fact-finding for "Map Act I beats onto Forgotten Island" (issue 31). Stopped by 
 
 `run.sh` / `dbg.sh` (run, or run under lldb, with `Auto Load Level ID`), `shot.sh` + `winid.swift` (capture the game window), `classmap.py` + `summ.py` (class id → name, per-class summary), `build.sh`.
 
-## Next step when resuming
+## Update 2026-10-05
 
-Get sector teleport working (sector switch plus hero position and camera reset), then screenshot and describe each sector of 0x8.
+Finished. See **`sectors.md`**, which has a description, nearby actors and lava status for all 23 checkpoints of 0x8 and both of 0x9, with screenshots in `sectors/`. It also covers the stream `.MIB`, the text table size and the trigger zone sector of every 0x8/0x9 cinematic. This branch now merges `macos/arm64-port`. The guard-disabling hack in `Types.h` and the actor/forcesector dumps are reverted. The research hooks that remain are `DebugScene.cpp` (command file), `Cinematic.cpp` and `TranslatedTextData.cpp` (logs), plus two `ActorShoot.cpp` bypasses: `CBehaviourShootFire::Manage` asserts in sector 3. The sections below are the 2026-09-30 notes and are partly superseded.

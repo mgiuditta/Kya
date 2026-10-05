@@ -543,6 +543,7 @@ private:
 		}
 
 		cleanupSwapChain();
+		cleanupDelegate();
 
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			vkDestroyBuffer(GetDevice(), uniformBuffers[i], GetAllocator());
@@ -962,6 +963,7 @@ public:
 public:
 	uint32_t presentImageIndex = 0;
 	Renderer::RenderDelegate renderDelegate;
+	Multidelegate<> cleanupDelegate;
 	bool frameReady = false;
 
 	void waitUntilReady() {
@@ -1382,6 +1384,11 @@ namespace Renderer
 	RenderDelegate& GetRenderDelegate()
 	{
 		return app.renderDelegate;
+	}
+
+	Multidelegate<>& GetCleanupDelegate()
+	{
+		return app.cleanupDelegate;
 	}
 
 	void SetHeadless(bool bValue) {

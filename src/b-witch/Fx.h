@@ -90,7 +90,7 @@ public:
 	virtual void Hide();
 	virtual void Reveal();
 	virtual void Stop(float param_1);
-	virtual void Func_0x28() { IMPLEMENTATION_GUARD(); }
+	virtual bool IsLooped() { IMPLEMENTATION_GUARD(); return false; }
 	virtual int GetType() = 0;
 	virtual void Func_0x30(float param_1);
 	virtual void NotifySonIsDead(CNewFx* pSon, int);
@@ -157,6 +157,11 @@ public:
 		return type;
 	}
 
+	inline bool IsLooped()
+	{
+		return IsValid() && pFx->IsLooped();
+	}
+
 	inline void SetPosition(edF32VECTOR4* pNewPosition)
 	{
 		if (IsValid()) {
@@ -172,6 +177,17 @@ public:
 			pFx->rotationEuler = *pNewRotationEuler;
 		}
 
+		return;
+	}
+
+	inline void SetRotationEuler(float x, float y, float z, float w)
+	{
+		if (IsValid()) {
+			pFx->rotationEuler.x = x;
+			pFx->rotationEuler.y = y;
+			pFx->rotationEuler.z = z;
+			pFx->rotationEuler.w = w;
+		}
 		return;
 	}
 

@@ -1,9 +1,31 @@
+#include <cstdio>
 #include "Cinematic.h"
 
 #include "CinResCollection.h"
 
 #include "port/pointer_conv.h"
 #include "CinScene.h"
+
+// RESEARCH ONLY: log every subtitle track (type 0xd9cee9bc) and its keys, plus audio/subtitle sources.
+static const char* gResearchCinName = "?";
+static void ResearchLog(const char* kind, const char* pBuf, int len)
+{
+	FILE* tf = fopen("/private/tmp/claude-501/-Users-matteo-dev-kya/619f66d4-43a6-4a8e-bd4d-0b15727c29ea/scratchpad/subs.tsv", "a");
+	if (!tf) return;
+	if (len < 0) { fprintf(tf, "R\t%s\t%s\t%s\n", gResearchCinName, kind, pBuf); fclose(tf); return; }
+	{ static int sceCount = 0; char path[512]; snprintf(path, sizeof(path), "/private/tmp/claude-501/-Users-matteo-dev-kya/619f66d4-43a6-4a8e-bd4d-0b15727c29ea/scratchpad/sce/%03d_%s.sce", sceCount++, gResearchCinName);
+	  FILE* df = fopen(path, "wb"); if (df) { fwrite(pBuf, 1, len, df); fclose(df); } }
+	int tracks = 0, keys = 0;
+	for (int off = 8; off + 16 <= len; off += 4) {
+		if (*(uint*)(pBuf + off) != 0xd9cee9bc) continue;
+		int size = *(int*)(pBuf + off - 4); unsigned short kc = *(unsigned short*)(pBuf + off + 4);
+		if (kc == 0 || size < 16 + kc * 0x18 || size > 0x100000) continue;
+		const uint* pTags = (const uint*)(pBuf + off + 8 + kc * 4);
+		tracks++; keys += kc;
+		for (int k = 0; k < kc; k++) fprintf(tf, "K\t%s\t%d\t%08x%08x\t%.2f\n", gResearchCinName, tracks, pTags[k * 5 + 2], pTags[k * 5 + 1], *(const float*)(pBuf + off + 8 + k * 4));
+	}
+	fprintf(tf, "S\t%s\t%s\ttracks=%d\tkeys=%d\tlen=%d\n", gResearchCinName, kind, tracks, keys, len); fclose(tf);
+}
 
 bool edCinematic::Create(edCinGameInterface& pInterface, void* pCinFileBuffer, int bufferLength)
 {
@@ -73,6 +95,7 @@ bool edCinematic::Create(edCinGameInterface& pInterface, const char* fileName)
 		uVar1 = false;
 	}
 	else {
+		gResearchCinName = fileName; // RESEARCH ONLY
 		uVar1 = Create(pInterface, pCinResource, bufferLength);
 	}
 	return uVar1;
@@ -93,6 +116,7 @@ bool edCinematicSource::Create(edCinGameInterface& loadObj, edResCollection& res
 		/* Loads the SCE asset for the cutscene
 		   Example: default.sce */
 		pcVar1 = resPtr.LoadResource(loadObj, this->pInternal->offset, &sceFileLength);
+		ResearchLog("sce", pcVar1, sceFileLength);
 		/* This will load all the assets from the SCE file */
 		edSCENEtag* pTag = local_4.Create(pcVar1, sceFileLength, loadObj);
 		this->pInternal->pTag = STORE_POINTER(pTag);
@@ -102,6 +126,7 @@ bool edCinematicSource::Create(edCinGameInterface& loadObj, edResCollection& res
 			local_c = (edCinSourceAudioI*)0x0;
 			loadObj.GetSourceAudioInterface(&local_c);
 			pcVar1 = resPtr.GetResFilename(this->pInternal->offset);
+			ResearchLog("audio", pcVar1, -1);
 			local_c->Create(pcVar1);
 			this->pInternal->pTag = STORE_POINTER(local_c);
 		}
@@ -117,6 +142,7 @@ bool edCinematicSource::Create(edCinGameInterface& loadObj, edResCollection& res
 
 				uint* pOffsetDataPtr = reinterpret_cast<uint*>(pOffsetData);
 
+				ResearchLog("subtitle", pcVar1, -1);
 				local_10->Create(pcVar1, (pOffsetDataPtr[1] & 0x80000000) != 0);
 				this->pInternal->pTag = STORE_POINTER(local_10);
 			}

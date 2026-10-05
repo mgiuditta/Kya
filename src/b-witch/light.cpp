@@ -131,6 +131,130 @@ void CLight::Inactivate()
 	return;
 }
 
+// The light shapes below were rebuilt from the PS2 executable. CLightTorch::DoLighting (0x1ab950) inlines all of them
+// and dispatches on lightType; CLightOmni (0x1ac730), CLightSpot (0x1ac490) and CLightDirectional (0x1ac9a0) each
+// inline one.
+
+// Omni (shape 3): full light inside fallout0, linear falloff on squared distance to zero at fallout1.
+static bool LightShapeOmni_DoLighting(BaseShapeB* pShape, LightingContext* pContext)
+{
+	edF32VECTOR4 toTarget;
+	float distSquared;
+	float fallout0Squared;
+	float fallout1Squared;
+
+	toTarget = pContext->position - pShape->position;
+	distSquared = toTarget.x * toTarget.x + toTarget.y * toTarget.y + toTarget.z * toTarget.z;
+	fallout1Squared = pShape->fallout1 * pShape->fallout1;
+	if (fallout1Squared < distSquared) {
+		return false;
+	}
+
+	fallout0Squared = pShape->fallout0 * pShape->fallout0;
+	toTarget = toTarget * (1.0f / sqrtf(distSquared));
+
+	if (distSquared < fallout0Squared) {
+		pContext->colorMultiplier = 1.0f;
+		*pContext->pLightDirection = (*pContext->pLightDirection) + (toTarget * -1.0f);
+	}
+	else {
+		pContext->colorMultiplier = 1.0f - (distSquared - fallout0Squared) / (fallout1Squared - fallout0Squared);
+		*pContext->pLightDirection = (*pContext->pLightDirection) + (toTarget * -pContext->colorMultiplier);
+	}
+
+	return true;
+}
+
+// Spot (shape 4): omni falloff on distance, times a cone between fov1 and fov0 (cosines of the target angle).
+static bool LightShapeSpot_DoLighting(BaseShape* pShape, LightingContext* pContext)
+{
+	edF32VECTOR4 toTarget;
+	float distSquared;
+	float fallout0Squared;
+	float fallout1Squared;
+	float cosAngle;
+
+	toTarget = pContext->position - pShape->position;
+	distSquared = toTarget.x * toTarget.x + toTarget.y * toTarget.y + toTarget.z * toTarget.z;
+	fallout1Squared = pShape->fallout1 * pShape->fallout1;
+	if (fallout1Squared < distSquared) {
+		return false;
+	}
+
+	toTarget = toTarget * (1.0f / sqrtf(distSquared));
+	cosAngle = toTarget.x * pShape->direction.x + toTarget.y * pShape->direction.y + toTarget.z * pShape->direction.z;
+	if (cosAngle <= pShape->fov0) {
+		return false;
+	}
+
+	fallout0Squared = pShape->fallout0 * pShape->fallout0;
+	if (distSquared < fallout0Squared) {
+		pContext->colorMultiplier = 1.0f;
+	}
+	else {
+		pContext->colorMultiplier = 1.0f - (distSquared - fallout0Squared) / (fallout1Squared - fallout0Squared);
+	}
+
+	if (cosAngle < pShape->fov1) {
+		pContext->colorMultiplier = pContext->colorMultiplier * (1.0f - (pShape->fov1 - cosAngle) / (pShape->fov1 - pShape->fov0));
+	}
+
+	*pContext->pLightDirection = (*pContext->pLightDirection) + (toTarget * -pContext->colorMultiplier);
+	return true;
+}
+
+// Cylinder (shape 2): along direction, linear falloff from fallout0 to fallout1; across it, falloff on squared
+// radius from fov0^2 to fov1^2. The light points along direction rather than at the target.
+static bool LightShapeCylinder_DoLighting(BaseShape* pShape, LightingContext* pContext)
+{
+	edF32VECTOR4 toTarget;
+	float along;
+	float radiusSquared;
+	float fov0Squared;
+	float fov1Squared;
+	float multiplier;
+
+	toTarget = pContext->position - pShape->position;
+	along = toTarget.x * pShape->direction.x + toTarget.y * pShape->direction.y + toTarget.z * pShape->direction.z;
+	if ((along < 0.0f) || (pShape->fallout1 < along)) {
+		return false;
+	}
+
+	radiusSquared = (toTarget.x * toTarget.x + toTarget.y * toTarget.y + toTarget.z * toTarget.z) - along * along;
+	fov1Squared = pShape->fov1 * pShape->fov1;
+	if (fov1Squared < radiusSquared) {
+		return false;
+	}
+
+	if (along < pShape->fallout0) {
+		multiplier = 1.0f;
+	}
+	else {
+		multiplier = 1.0f - (along - pShape->fallout0) / (pShape->fallout1 - pShape->fallout0);
+	}
+
+	fov0Squared = pShape->fov0 * pShape->fov0;
+	if (fov0Squared < radiusSquared) {
+		multiplier = multiplier * (1.0f - (radiusSquared - fov0Squared) / (fov1Squared - fov0Squared));
+	}
+
+	pContext->colorMultiplier = multiplier;
+	*pContext->pLightDirection = (*pContext->pLightDirection) + (pShape->direction * -multiplier);
+	return true;
+}
+
+static void LightColour_Accumulate(SimpleColorModel* pColorModel, LightingContext* pContext)
+{
+	if (pContext->colorMultiplier == 1.0f) {
+		*pContext->pLightAmbient = (*pContext->pLightAmbient) + pColorModel->ambientColor;
+		*pContext->pLightColor = (*pContext->pLightColor) + pColorModel->color;
+	}
+	else {
+		*pContext->pLightAmbient = (*pContext->pLightAmbient) + (pColorModel->ambientColor * pContext->colorMultiplier);
+		*pContext->pLightColor = (*pContext->pLightColor) + (pColorModel->color * pContext->colorMultiplier);
+	}
+}
+
 bool CLight::DoLighting(LightingContext* pContext)
 {
 	return false;
@@ -367,8 +491,14 @@ void CLightSpot::Manage()
 
 bool CLightSpot::DoLighting(LightingContext* pContext)
 {
-	IMPLEMENTATION_GUARD();
-	return false;
+	bool bLit;
+
+	bLit = LightShapeSpot_DoLighting(&this->baseShape, pContext);
+	if (bLit != false) {
+		LightColour_Accumulate(&this->colorModel, pContext);
+	}
+
+	return bLit;
 }
 
 void CLightSpot::Activate()
@@ -453,8 +583,14 @@ void CLightDirectional::Inactivate()
 
 bool CLightDirectional::DoLighting(LightingContext* pContext)
 {
-	IMPLEMENTATION_GUARD();
-	return false;
+	bool bLit;
+
+	bLit = LightShapeCylinder_DoLighting(&this->baseShape, pContext);
+	if (bLit != false) {
+		LightColour_Accumulate(&this->colorModel, pContext);
+	}
+
+	return bLit;
 }
 
 int CLightDirectional::GetBaseShape(BaseShape** ppBaseShape)
@@ -531,8 +667,14 @@ void CLightOmni::Activate()
 
 bool CLightOmni::DoLighting(LightingContext* pContext)
 {
-	IMPLEMENTATION_GUARD();
-	return false;
+	bool bLit;
+
+	bLit = LightShapeOmni_DoLighting(&this->baseShape, pContext);
+	if (bLit != false) {
+		LightColour_Accumulate(&this->colorModel, pContext);
+	}
+
+	return bLit;
 }
 
 int CLightOmni::GetBaseShape(BaseShape** ppBaseShape)
@@ -649,8 +791,33 @@ void CLightTorch::Activate()
 
 bool CLightTorch::DoLighting(LightingContext* pContext)
 {
-	IMPLEMENTATION_GUARD();
-	return false;
+	bool bLit;
+
+	switch (this->lightType) {
+	case 1:
+		*pContext->pLightDirection = (*pContext->pLightDirection) + (this->baseShape.direction * -1.0f);
+		pContext->colorMultiplier = 1.0f;
+		bLit = true;
+		break;
+	case 2:
+		bLit = LightShapeCylinder_DoLighting(&this->baseShape, pContext);
+		break;
+	case 3:
+		bLit = LightShapeOmni_DoLighting(&this->baseShape, pContext);
+		break;
+	case 4:
+		bLit = LightShapeSpot_DoLighting(&this->baseShape, pContext);
+		break;
+	default:
+		bLit = false;
+		break;
+	}
+
+	if (bLit != false) {
+		LightColour_Accumulate(&this->colorModel, pContext);
+	}
+
+	return bLit;
 }
 
 int CLightTorch::GetBaseShape(BaseShape** ppBaseShape)

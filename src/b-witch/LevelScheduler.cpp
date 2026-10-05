@@ -351,8 +351,6 @@ void CLevelScheduler::Level_FillRunInfo(int levelID, int elevatorID, int subsect
 		this->baseSectorIndex = pBSHD->sectorId;
 		SaveGame_CloseChunk();
 	}
-	{ FILE* tf = fopen("/private/tmp/claude-501/-Users-matteo-dev-kya/682bc2f7-7a84-4467-ab12-be38ca6b7cbc/scratchpad/forcesector.txt", "r");
-	  if (tf) { int fs = -1; if (fscanf(tf, "%d", &fs) == 1 && fs > 0) { this->baseSectorIndex = fs; pLevelInfo->sectorStartIndex = fs; } fclose(tf); } }
 
 	return;
 }
@@ -704,7 +702,7 @@ int* CLevelScheduler::LevelsInfo_ReadSectors_V7_V9(S_LVLNFO_SECTOR_V7_V9* aLvlNf
 				do {
 					curConditionIdentifier = *pCurConditionData;
 
-					ScenaricCondition cond;
+					CScenaricCondition cond;
 					cond.Create(pCurConditionData + 1);
 
 					if ((0 < curConditionIdentifier) && (curConditionIdentifier < 0x1e)) {
@@ -755,7 +753,7 @@ int* CLevelScheduler::LevelsInfo_ReadSectors_V7_V9(S_LVLNFO_SECTOR_V7_V9* aLvlNf
 				if (0 < nbTotalSimpleConditions) {
 					do {
 						curConditionIdentifier = *pCurConditionData;
-						ScenaricCondition cond;
+						CScenaricCondition cond;
 						cond.Create(pCurConditionData + 1);
 
 						if ((0 < curConditionIdentifier) && (curConditionIdentifier < 0x1e)) {
@@ -1397,12 +1395,13 @@ bool CLevelScheduler::IsACompatibleChunkRecurse(CChunk* pChunk)
 
 	CChunk* pCurChunk;
 	if ((bFoundLevelSaveData) && (pCurChunk = pChunk, pChunk->field_0x0 == 0x16660666)) {
-		while ((pBLHD = pCurChunk + 1, reinterpret_cast<char*>(pBLHD) < reinterpret_cast<char*>(pChunk) + pChunk->size + sizeof(CChunk)) && (bFoundLevelSaveData)) {
+		// size is a schema version; offset is the serialized payload extent.
+		while ((pBLHD = pCurChunk + 1, reinterpret_cast<char*>(pBLHD) < reinterpret_cast<char*>(pChunk) + pChunk->offset + sizeof(CChunk)) && (bFoundLevelSaveData)) {
 			if (IsACompatibleChunkRecurse(pBLHD) == 0) {
 				bFoundLevelSaveData = false;
 			}
 
-			pCurChunk = reinterpret_cast<CChunk*>(reinterpret_cast<char*>(pBLHD) + pBLHD->size);
+			pCurChunk = reinterpret_cast<CChunk*>(reinterpret_cast<char*>(pBLHD) + pBLHD->offset);
 		}
 	}
 
@@ -2128,6 +2127,26 @@ void CLevelScheduler::SaveGame_LoadFromBuffer(SaveBigAlloc* pSaveData, uint size
 
 	Level_FillRunInfo(levelID, -1, -1);
 	CScene::_pinstance->SetFadeStateTerm(true);
+
+	return;
+}
+
+void CLevelScheduler::SaveGame_InitiateAutoSave(float time, int mode)
+{
+
+	if (((this->curAutoSaveTime == 0.0f) || (mode != 0)) || (180.0f < (time + GetTimer()->scaledTotalTime) - this->curAutoSaveTime)) {
+		if (time == 0.0f) {
+			time = 0.001f;
+		}
+
+		if (this->autoSaveTriggerTime < time) {
+			this->autoSaveTriggerTime = time;
+		}
+
+		if (mode != 0) {
+			this->curAutoSaveTime = 0.0f;
+		}
+	}
 
 	return;
 }
@@ -3962,6 +3981,17 @@ void CLevelScheduler::CloseLevelChunk()
 Episode* CLevelScheduler::GetEpisode(int index)
 {
 	if ((index < 0) || (_gGameNfo.nbEpisodes <= index)) {
+		index = _gGameNfo.nbEpisodes + -1;
+	}
+
+	return g_EpisodeDataArray_0048eb0 + index;
+}
+
+Episode* CLevelScheduler::GetLastEpisode()
+{
+	int index;
+
+	if ((_gScenVarInfo[6].currentValue < 0) || (index = _gScenVarInfo[6].currentValue, _gGameNfo.nbEpisodes <= _gScenVarInfo[6].currentValue)) {
 		index = _gGameNfo.nbEpisodes + -1;
 	}
 

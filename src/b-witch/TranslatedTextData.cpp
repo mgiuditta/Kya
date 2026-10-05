@@ -62,6 +62,12 @@ void CMessageFile::prepare_buffer()
 			} while (uVar2 < (uint)this->entryCount);
 		}
 	}
+	// RESEARCH ONLY: dump every text table that gets prepared.
+	{ FILE* tf = fopen("/private/tmp/claude-501/-Users-matteo-dev-kya/619f66d4-43a6-4a8e-bd4d-0b15727c29ea/scratchpad/subs.tsv", "a");
+	  if (tf) { fprintf(tf, "T\t%s\tentries=%d\n", this->szFilePath, this->entryCount);
+		ulong* p = this->pDataA;
+		for (int i = 0; i < this->entryCount && i < 400; i++, p += 2) fprintf(tf, "E\t%s\t%016llx\t%.70s\n", this->szFilePath, (unsigned long long)p[0], *(char**)(p + 1));
+		fclose(tf); } }
 	return;
 }
 

@@ -1,0 +1,74 @@
+T	lvl08_%s.bin	entries=14
+E	lvl08_%s.bin	18667c086e53454e	
+E	lvl08_%s.bin	18667c086d53454e	
+E	lvl08_%s.bin	18667c086c53454e	
+E	lvl08_%s.bin	18667c086b53454e	
+E	lvl08_%s.bin	18667c086a53454e	
+E	lvl08_%s.bin	18667c086953454e	
+E	lvl08_%s.bin	18667c086853454e	
+E	lvl08_%s.bin	18667c086753454e	Be careful on this platform, it might collapse if there's too much wei
+E	lvl08_%s.bin	18667c086653454e	Pay attention to the lava's rhythm and don't stand around too long, or
+E	lvl08_%s.bin	18667c096f53454e	Be careful around these pools, they might contain unfriendly critters.
+E	lvl08_%s.bin	18667c096e53454e	Don't take this path by foot - you won't have time to cross. Find anot
+E	lvl08_%s.bin	18667c096d53454e	Aim and shoot the head of the monster and then use him to cross the po
+E	lvl08_%s.bin	18667c096c53454e	Direction: "Laboratory" on your left; "Hell's Road" on your right. 
+E	lvl08_%s.bin	18667c096b53454e	I'm sure that the way to open this door must be found somewhere in thi
+R	BEGIN_LEVEL9_Begin_Level9_SceneMontage.cin	audio	f30646e0.mih
+R	CIN_29_SC_41_CIN_29_SC_41_SceneMontage.cin	audio	7200bd90.mih
+R	CIN_29_SC_41_CIN_29_SC_41_SceneMontage.cin	subtitle	level09\cinematiques\rsc_cin_29\language\cin_29_gb.bin
+T	level09\cinematiques\rsc_cin_29\language\cin_29_%s.bin	entries=10
+E	level09\cinematiques\rsc_cin_29\language\cin_29_%s.bin	1c614d6f63523431	KYA! How did you... 
+E	level09\cinematiques\rsc_cin_29\language\cin_29_%s.bin	1c614d6f63513431	Are you ok?
+E	level09\cinematiques\rsc_cin_29\language\cin_29_%s.bin	1c614d6f63503431	I... never thought I'd... see you again! 
+E	level09\cinematiques\rsc_cin_29\language\cin_29_%s.bin	1c614d6f63573431	Frank! I'm gonna get you out of here!
+E	level09\cinematiques\rsc_cin_29\language\cin_29_%s.bin	1c614d6f63563431	You better go now!! GO! NOW!
+E	level09\cinematiques\rsc_cin_29\language\cin_29_%s.bin	1c614d6f63553431	NOW!  GO!
+E	level09\cinematiques\rsc_cin_29\language\cin_29_%s.bin	1c614d6f63543431	Haaaaa!
+E	level09\cinematiques\rsc_cin_29\language\cin_29_%s.bin	1c614d6f635b3431	Frank!
+E	level09\cinematiques\rsc_cin_29\language\cin_29_%s.bin	1c614d6f635a3431	NO!
+E	level09\cinematiques\rsc_cin_29\language\cin_29_%s.bin	1c614d6f62533431	Oh no....
+R	CIN_30_SC_42_CIN_30_SC_42_SceneMontage.cin	audio	aeb82dfa.mih
+R	CIN_30_SC_42_CIN_30_SC_42_SceneMontage.cin	subtitle	level09\cinematiques\rsc_cin_30\language\cin_30_gb.bin
+T	level09\cinematiques\rsc_cin_30\language\cin_30_%s.bin	entries=13
+E	level09\cinematiques\rsc_cin_30\language\cin_30_%s.bin	1c60446f63523432	You owe me big-time.
+E	level09\cinematiques\rsc_cin_30\language\cin_30_%s.bin	1c60446f63513432	Oof! My head is killing me. 
+E	level09\cinematiques\rsc_cin_30\language\cin_30_%s.bin	1c60446f63503432	You should hurt all over, after the 
+E	level09\cinematiques\rsc_cin_30\language\cin_30_%s.bin	1c60446f63573432	Kya, where ARE we? What has been going on?
+E	level09\cinematiques\rsc_cin_30\language\cin_30_%s.bin	1c60446f63563432	Ha! Where to begin? I'll
+E	level09\cinematiques\rsc_cin_30\language\cin_30_%s.bin	1c60446f63553432	OK, boss! 
+E	level09\cinematiques\rsc_cin_30\language\cin_30_%s.bin	1c60446f63543432	Maybe there's a way there...
+E	level09\cinematiques\rsc_cin_30\language\cin_30_%s.bin	1c60446f635b3432	OK! We're outta here!
+E	level09\cinematiques\rsc_cin_30\language\cin_30_%s.bin	1c60446f635b6b53	OK! We're Audi 5000.
+E	level09\cinematiques\rsc_cin_30\language\cin_30_%s.bin	1c60446f635b6b50	OK, let's get out of here!
+E	level09\cinematiques\rsc_cin_30\language\cin_30_%s.bin	1c60446f635a3432	Kya...
+E	level09\cinematiques\rsc_cin_30\language\cin_30_%s.bin	1c60446f62533432	Jump in!
+E	level09\cinematiques\rsc_cin_30\language\cin_30_%s.bin	1c60446f62536b53	Jump in here. It's surprising the 
+R	CIN_30BIS_SC_42_CIN_30BIS_SC_42_SceneMontage.cin	audio	27ccea63.mih
+R	CIN_30BIS_SC_42_CIN_30BIS_SC_42_SceneMontage.cin	subtitle	level09\cinematiques\rsc_cin_30\language\cin_30_gb.bin
+R	CIN_31BIS_SC_44_CIN_31BIS_SC_44_SceneMontage.cin	subtitle	nativcity\cinematiques\rsc_cin_31\language\cin_31_gb.bin
+T	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	entries=25
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f63523433	Wow.
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f63513433	C'mon, follow me.
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f63523434	She came looking for him, didn't she?
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f63503434	I knew it... She will end up bringing me what I need.
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f63523435	So tell us about Brazul.
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f63526b54	So tell us about him.
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f63513435	Well, let's see... he's insane... and 
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f63503435	Uh oh.
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f63506b54	Croa, and what am I, chopped liver? 
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f63573435	That means no one is safe... he can 
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f63576b54	That means no one is safe... he can transform anyone of us now.
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f63563435	«Anyone of us» is right. 
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f63553435	Then we have only one hope. You must find 
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f63543435	The runes will give you the strength you need. Without them, you have 
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f63546b54	The complete medallion will give you the strength you need to stop him
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f635b3435	Ok, well... I've already found most of them.
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f635b6b54	Sounds easy! I can find all the runes.
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f635a3435	Well, actually, there is a problem, a BIG one.
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f62533435	Brazul has the central rune.... 
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f62536b54	Well, but... He has the last one...
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f62523435	He does? But I thought he couldn't touch them.
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f62513435	That's right, he couldn't move it. So 
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f62503435	It's on the land of the wolfen... no one goes there...
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f62573435	Fine. Whatever. 
+E	nativcity\cinematiques\rsc_cin_31\language\cin_31_%s.bin	1c60456f62576b54	I'm ready.

@@ -1,6 +1,6 @@
 #!/bin/zsh
 # usage: shot.sh <name|-> [cmd] [wait]
-S=/private/tmp/claude-501/-Users-matteo-dev-kya/682bc2f7-7a84-4467-ab12-be38ca6b7cbc/scratchpad
+S=/private/tmp/claude-501/-Users-matteo-dev-kya/619f66d4-43a6-4a8e-bd4d-0b15727c29ea/scratchpad
 if [ -n "$2" ]; then
   echo "$2" > $S/cmd.txt
   sleep ${3:-12}

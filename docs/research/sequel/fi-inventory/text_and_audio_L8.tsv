@@ -1,0 +1,30 @@
+T	lvl08_%s.bin	entries=14
+E	lvl08_%s.bin	18667c086e53454e	
+E	lvl08_%s.bin	18667c086d53454e	
+E	lvl08_%s.bin	18667c086c53454e	
+E	lvl08_%s.bin	18667c086b53454e	
+E	lvl08_%s.bin	18667c086a53454e	
+E	lvl08_%s.bin	18667c086953454e	
+E	lvl08_%s.bin	18667c086853454e	
+E	lvl08_%s.bin	18667c086753454e	Be careful on this platform, it might collapse if there's too much wei
+E	lvl08_%s.bin	18667c086653454e	Pay attention to the lava's rhythm and don't stand around too long, or
+E	lvl08_%s.bin	18667c096f53454e	Be careful around these pools, they might contain unfriendly critters.
+E	lvl08_%s.bin	18667c096e53454e	Don't take this path by foot - you won't have time to cross. Find anot
+E	lvl08_%s.bin	18667c096d53454e	Aim and shoot the head of the monster and then use him to cross the po
+E	lvl08_%s.bin	18667c096c53454e	Direction: "Laboratory" on your left; "Hell's Road" on your right. 
+E	lvl08_%s.bin	18667c096b53454e	I'm sure that the way to open this door must be found somewhere in thi
+R	CIN_28BIS_SC_40BIS_CIN_28bis_SC_40bis_SceneMontage.cin	audio	112c02f6.mih
+R	ELECTRORUNE_FORGOTTEN_ISLAND_Rune_FORGOTTENISLAND_SceneMontage.cin	audio	96a2f391.mih
+R	LAVAFALL_LavaFall_SceneMontage.cin	audio	b6f55b19.mih
+R	CIN_28BIS_SC_40_CIN_28BIS_SC_40_SceneMontage.cin	audio	ef6d9b22.mih
+R	CIN_28BIS_SC_40_CIN_28BIS_SC_40_SceneMontage.cin	subtitle	level08\cinematiques\rsc_cin_28\language\cin_28_gb.bin
+T	level08\cinematiques\rsc_cin_28\language\cin_28_%s.bin	entries=9
+E	level08\cinematiques\rsc_cin_28\language\cin_28_%s.bin	1c614c6f63523430	Load this up! We're leaving immediately...
+E	level08\cinematiques\rsc_cin_28\language\cin_28_%s.bin	1c614c6f63513430	Thanks for everything! Now I will be 
+E	level08\cinematiques\rsc_cin_28\language\cin_28_%s.bin	1c614c6f63503430	You two! 
+E	level08\cinematiques\rsc_cin_28\language\cin_28_%s.bin	1c614c6f63573430	Get rid of him. 
+E	level08\cinematiques\rsc_cin_28\language\cin_28_%s.bin	1c614c6f63576b51	Take care of the human! 
+E	level08\cinematiques\rsc_cin_28\language\cin_28_%s.bin	1c614c6f63576b52	The human is useless now... I'll leave him to you.
+E	level08\cinematiques\rsc_cin_28\language\cin_28_%s.bin	1c614c6f63563430	Stay here and inform me when it is all over...
+E	level08\cinematiques\rsc_cin_28\language\cin_28_%s.bin	1c614c6f63543430	It's time to go take off for the fortress.
+E	level08\cinematiques\rsc_cin_28\language\cin_28_%s.bin	1c614c6f63546b51	It's time to go take off for the fortress.

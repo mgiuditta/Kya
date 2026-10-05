@@ -17,6 +17,9 @@
 #include <cstdio>
 #include "CinematicManager.h"
 #include "CameraViewManager.h"
+#include "TranslatedTextData.h"
+#include "Audio.h"
+#include "DebugMenuWorld.h"
 
 namespace Debug {
 	namespace Scene {
@@ -151,8 +154,8 @@ namespace Debug {
 					pCamMan->AlertCamera(2, (void*)1);
 				}
 			}
-			const char* kCmd = "/private/tmp/claude-501/-Users-matteo-dev-kya/682bc2f7-7a84-4467-ab12-be38ca6b7cbc/scratchpad/cmd.txt";
-			const char* kOut = "/private/tmp/claude-501/-Users-matteo-dev-kya/682bc2f7-7a84-4467-ab12-be38ca6b7cbc/scratchpad/cmd_out.txt";
+			const char* kCmd = "/private/tmp/claude-501/-Users-matteo-dev-kya/619f66d4-43a6-4a8e-bd4d-0b15727c29ea/scratchpad/cmd.txt";
+			const char* kOut = "/private/tmp/claude-501/-Users-matteo-dev-kya/619f66d4-43a6-4a8e-bd4d-0b15727c29ea/scratchpad/cmd_out.txt";
 			FILE* f = fopen(kCmd, "r");
 			if (!f) return;
 			char line[256] = {};
@@ -189,6 +192,14 @@ namespace Debug {
 						i, c->fileName, c->pBankName_0x48, c->pBankName_0x50, c->nbTotalCinematicActors, c->nbTotalLevelActors, c->flags_0x4, c->uniqueIdentifier,
 						c->endLevelId, c->endElevatorId, c->endCutsceneId, trig ? trig->name : "-", rb ? rb->name : "-", c->zoneRefA.index, c->zoneRefB.index, c->zoneRefC.index, c->cineActorConfigCount);
 					for (int k = 0; k < c->cineActorConfigCount; k++) { CActor* a = c->aCineActorConfig[k].pActor.Get(); fprintf(o, " %s", a ? a->name : "?"); }
+					{ ed_zone_3d* zb = c->zoneRefB.Get(); ed_zone_3d* za = c->zoneRefA.Get();
+						fprintf(o, " | audio def=%d gb=%d", (int)c->defaultAudioTrackId, (int)c->aAudioTrackIds[CMessageFile::get_default_language()]);
+						int at = (int)c->aAudioTrackIds[CMessageFile::get_default_language()]; if (at == -1) at = (int)c->defaultAudioTrackId;
+						auto* pAud = CScene::ptable.g_AudioManager_00451698;
+						if (at >= 0 && at < pAud->field_0x30) fprintf(o, " stream=%s", pAud->GetStreamFileNameFromIndex_00184a40(at));
+						if (za) fprintf(o, " zoneA=%.1f,%.1f,%.1f r%.1f", za->boundSphere.x, za->boundSphere.y, za->boundSphere.z, za->boundSphere.w);
+						if (zb) fprintf(o, " zoneB=%.1f,%.1f,%.1f r%.1f", zb->boundSphere.x, zb->boundSphere.y, zb->boundSphere.z, zb->boundSphere.w);
+						fprintf(o, " text=%d", c->textData.entryCount); }
 					fprintf(o, "\n");
 				}
 			}
@@ -227,15 +238,17 @@ namespace Debug {
 					CActor* a = pAM->aActors[i];
 					if (a && a->typeID == CHECKPOINT_MANAGER) {
 						auto* m = static_cast<CActorCheckpointManager*>(a);
-						CWayPoint* w = m->aCheckpoints[n].pWayPointA.Get();
-						gHold[0] = w->location.x; gHold[1] = w->location.y + 1.0f; gHold[2] = w->location.z;
-						gHoldSector = m->aCheckpoints[n].sectorId; gHoldFrames = 240;
-						CActorHeroPrivate* h = reinterpret_cast<CActorHeroPrivate*>(CActorHero::_gThis);
-						h->lastCheckPointSector = gHoldSector; h->field_0xea0 = gHoldSector;
-						if (o) fprintf(o, "go cp %d sector %d\n", n, gHoldSector);
+						EnqueueLevelManageTask([m, n]() { m->ActivateCheckpoint(n); CScene::_pinstance->Level_CheckpointReset(); });
+						if (o) fprintf(o, "go cp %d sector %d\n", n, m->aCheckpoints[n].sectorId);
 						break;
 					}
 				}
+			}
+			else if (sscanf(line, "play %d", &n) == 1) {
+				auto* cm = g_CinematicManager_0048efc;
+				CCinematic* c = cm->ppCinematicObjB_A[n];
+				EnqueueLevelManageTask([c]() { c->flags_0x8 &= ~CINEMATIC_RUNTIME_FLAG_ONE_SHOT_LOCKED; c->Load(1); c->Start(); });
+				if (o) fprintf(o, "play %d %s\n", n, c->fileName);
 			}
 			else if (sscanf(line, "elev %d", &n) == 1) {
 				CScene::ptable.g_LevelScheduleManager_00451660->Level_Teleport(nullptr, CScene::ptable.g_LevelScheduleManager_00451660->currentLevelID, n, -1, -1);

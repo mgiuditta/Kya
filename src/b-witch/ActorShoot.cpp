@@ -89,6 +89,7 @@ void CActorShoot::Init()
 
 void CActorShoot::ComputeLighting()
 {
+	return; // RESEARCH ONLY: crashes in sector 3 of 0x8 once ShootFire::Manage is skipped.
 	CScene::ptable.g_LightManager_004516b0->ComputeLighting(this->lightingFloat_0xe0, this, this->lightingFlags, &this->lightingConfig);
 
 	return;
@@ -377,7 +378,7 @@ void CBehaviourShootFire::Init(CActor * pOwner)
 
 void CBehaviourShootFire::Manage()
 {
-	IMPLEMENTATION_GUARD();
+	// RESEARCH ONLY: guard hit at checkpoint 4 of 0x8, skipped so the inventory can continue.
 }
 
 void CBehaviourShootFire::Draw()

@@ -24,6 +24,8 @@ struct astruct_22
 	void FUN_002ef500();
 	void Init(edDList_material* param_2, edDList_material* param_3);
 	void FUN_002ef9b0(edDList_material* param_2, edDList_material* param_3);
+	void MoveMenuArrow(bool bNext);
+	void Reset();
 	void Term();
 
 	CSprite field_0x0;
@@ -42,7 +44,11 @@ struct astruct_22
 	uint field_0x1a0;
 	byte field_0x1a4;
 	int field_0x1a8;
-	int field_0x1ac;
+	union {
+		int field_0x1ac;
+		float centerX;
+		void* pContext;
+	};
 };
 
 class CBehaviourHelperSign : public CBehaviour
