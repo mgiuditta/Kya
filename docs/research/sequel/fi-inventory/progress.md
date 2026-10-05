@@ -39,3 +39,7 @@ Fact-finding for "Map Act I beats onto Forgotten Island" (issue 31). Stopped by 
 ## Update 2026-10-05
 
 Finished. See **`sectors.md`**, which has a description, nearby actors and lava status for all 23 checkpoints of 0x8 and both of 0x9, with screenshots in `sectors/`. It also covers the stream `.MIB`, the text table size and the trigger zone sector of every 0x8/0x9 cinematic. This branch now merges `macos/arm64-port`. The guard-disabling hack in `Types.h` and the actor/forcesector dumps are reverted. The research hooks that remain are `DebugScene.cpp` (command file), `Cinematic.cpp` and `TranslatedTextData.cpp` (logs), plus two `ActorShoot.cpp` bypasses: `CBehaviourShootFire::Manage` asserts in sector 3. The sections below are the 2026-09-30 notes and are partly superseded.
+
+## 2026-10-05: reused Act I cinematics (issue 48)
+
+See `cinematics.md` and `cinematics/`. CIN_29 shows human Frank turning into the Wolfen, and CIN_31BIS is Brazul only. CIN_28 (Brazul, 0x8) is blocked by a 4-byte override of `LEVEL_8\cinematic.bin` (`block_cin28.py`, verified). The hook gained `pos x y z`, `ntf N msg`, `block N` and `state N`.

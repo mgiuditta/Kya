@@ -244,6 +244,25 @@ namespace Debug {
 					}
 				}
 			}
+			else if (sscanf(line, "pos %f %f %f", &x, &y, &z) == 3) {
+				EnqueueLevelManageTask([=]() { edF32VECTOR4 v = { x, y, z, 1.0f }; CActorHero::_gThis->UpdatePosition(&v, true); });
+				if (o) fprintf(o, "pos %.1f %.1f %.1f\n", x, y, z);
+			}
+			else if (sscanf(line, "ntf %d %f", &n, &x) == 2) {
+				int m = (int)x;
+				EnqueueLevelManageTask([=]() { g_CinematicManager_0048efc->NotifyCinematic(n, CActorHero::_gThis, m, 0); });
+				if (o) fprintf(o, "ntf %d 0x%x\n", n, m);
+			}
+			else if (sscanf(line, "block %d", &n) == 1) {
+				// Simulates field_0x4c == 0 in the cinematic table entry (CCinematic::Create sets CONDITION_BLOCKED).
+				CCinematic* c = g_CinematicManager_0048efc->ppCinematicObjB_A[n];
+				c->flags_0x8 |= CINEMATIC_RUNTIME_FLAG_CONDITION_BLOCKED;
+				if (o) fprintf(o, "block %d %s flags8=0x%x f4c=%u\n", n, c->fileName, c->flags_0x8, c->field_0x4c);
+			}
+			else if (sscanf(line, "state %d", &n) == 1) {
+				CCinematic* c = g_CinematicManager_0048efc->ppCinematicObjB_A[n];
+				if (o) fprintf(o, "state %d %s state=%d flags8=0x%x f4c=%u\n", n, c->fileName, (int)c->state, c->flags_0x8, c->field_0x4c);
+			}
 			else if (sscanf(line, "play %d", &n) == 1) {
 				auto* cm = g_CinematicManager_0048efc;
 				CCinematic* c = cm->ppCinematicObjB_A[n];
