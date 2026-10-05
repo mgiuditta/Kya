@@ -29,7 +29,7 @@ class MusicOutput;
 // miniaudio adapters (edSoundDeviceMiniaudio.cpp); each returns null on failure.
 std::unique_ptr<SampleVoice> CreateDeviceSampleVoice(const DecodedSample& sample);
 std::unique_ptr<StreamVoice> CreateDeviceStreamVoice(const std::vector<std::int16_t>& samples, std::uint32_t channels,
-	std::uint32_t sampleRate, float volume);
+	std::uint32_t sampleRate, float volume, std::uint64_t startFrame = 0);
 std::unique_ptr<MusicOutput> CreateDeviceMusicOutput();
 }
 #endif

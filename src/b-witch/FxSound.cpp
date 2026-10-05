@@ -202,6 +202,23 @@ void CFxNewSound::Stop(float param_1)
 	return;
 }
 
+bool CFxNewSound::IsLooped()
+{
+	CFxSoundScenaricData* pCVar1;
+	bool uVar2;
+
+	pCVar1 = this->field_0x84;
+	// port: a scenaric entry with no sound reports not looped instead of calling through null.
+	if ((pCVar1 == (CFxSoundScenaricData*)0x0) || (pCVar1->soundRef.Get() == (CSound*)0x0)) {
+		uVar2 = false;
+	}
+	else {
+		uVar2 = pCVar1->soundRef.Get()->IsLooping(this->field_0x80);
+	}
+
+	return uVar2;
+}
+
 int CFxNewSound::GetType()
 {
 	return FX_TYPE_SOUND;

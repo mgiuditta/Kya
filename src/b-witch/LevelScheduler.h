@@ -184,7 +184,7 @@ struct SaveBigAlloc {
 struct S_COMPANION_INFO
 {
 	uint conditionIdentifier;
-	ScenaricCondition cond;
+	CScenaricCondition cond;
 };
 
 struct S_LVLNFO_SECTOR_V7_V9
@@ -458,6 +458,8 @@ public:
 	uint SaveGame_SaveToBuffer(SaveBigAlloc* pSaveData, SaveDataDesc* pSaveDesc);
 	void SaveGame_LoadFromBuffer(SaveBigAlloc* pSaveData, uint size);
 
+	void SaveGame_InitiateAutoSave(float time, int mode);
+
 	void Level_WolfenChanged();
 
 	static int MapFunc_002d8dc0(ObjectiveEntry* param_1);
@@ -470,6 +472,7 @@ public:
 	bool OpenLevelChunk(int levelId);
 	void CloseLevelChunk();
 	Episode* GetEpisode(int index);
+	static Episode* GetLastEpisode();
 
 public:
 

@@ -42,6 +42,7 @@ struct Stream
 	StreamInfo info;
 	Clock::time_point startedAt{};
 	std::uint64_t positionAtStart = 0;
+	std::uint64_t voiceStartFrame = 0;
 	std::vector<std::int16_t> samples;
 	std::uint32_t sampleRate = 0;
 	// Declared after samples so the voice releases its buffer before PCM dies.
@@ -101,6 +102,8 @@ class XAudioStreamVoice final : public StreamVoice
 public:
 	IXAudio2SourceVoice* sourceVoice = nullptr;
 	const std::vector<std::int16_t>* samples = nullptr;
+	std::uint32_t channels = 1;
+	std::uint64_t startFrame = 0;
 
 	~XAudioStreamVoice() override
 	{
@@ -119,6 +122,7 @@ public:
 			XAUDIO2_BUFFER buffer{};
 			buffer.AudioBytes = static_cast<UINT32>(samples->size() * sizeof(std::int16_t));
 			buffer.pAudioData = reinterpret_cast<const BYTE*>(samples->data());
+			buffer.PlayBegin = static_cast<UINT32>(startFrame);
 			const HRESULT result = sourceVoice->SubmitSourceBuffer(&buffer);
 			if (FAILED(result)) {
 				LogAudioError("SubmitSourceBuffer failed", result);
@@ -152,18 +156,18 @@ public:
 	{
 		XAUDIO2_VOICE_STATE state{};
 		sourceVoice->GetState(&state, 0);
-		return state.SamplesPlayed;
+		return startFrame + state.SamplesPlayed;
 	}
 	bool IsFinished() override
 	{
 		XAUDIO2_VOICE_STATE state{};
 		sourceVoice->GetState(&state, 0);
-		return state.BuffersQueued == 0 && state.SamplesPlayed >= samples->size();
+		return state.BuffersQueued == 0 && startFrame + state.SamplesPlayed >= samples->size() / channels;
 	}
 };
 
 std::unique_ptr<StreamVoice> CreateDeviceStreamVoice(const std::vector<std::int16_t>& samples, std::uint32_t channels,
-	std::uint32_t sampleRate, float volume)
+	std::uint32_t sampleRate, float volume, std::uint64_t startFrame)
 {
 	if (!EnsureAudioDevice())
 		return nullptr;
@@ -179,6 +183,8 @@ std::unique_ptr<StreamVoice> CreateDeviceStreamVoice(const std::vector<std::int1
 
 	auto voice = std::make_unique<XAudioStreamVoice>();
 	voice->samples = &samples;
+	voice->channels = channels;
+	voice->startFrame = startFrame;
 	const HRESULT result = audioEngine->CreateSourceVoice(&voice->sourceVoice, &format);
 	if (FAILED(result)) {
 		LogAudioError("CreateSourceVoice failed", result);
@@ -199,7 +205,8 @@ bool CreateStreamVoice(Stream& stream)
 		return true;
 	if (stream.samples.empty() || stream.sampleRate == 0)
 		return false;
-	stream.voice = CreateDeviceStreamVoice(stream.samples, stream.info.channels, stream.sampleRate, stream.info.volume);
+	stream.voice = CreateDeviceStreamVoice(stream.samples, stream.info.channels, stream.sampleRate, stream.info.volume,
+		stream.voiceStartFrame);
 	return stream.voice != nullptr;
 }
 #endif
@@ -316,8 +323,10 @@ std::uint64_t CurrentPosition(Stream& stream)
 {
 #ifdef AUDIO_STREAM_DEVICE
 	if (stream.voice != nullptr && !stream.samples.empty()) {
-		if (stream.voice->IsFinished())
+		if (stream.voice->IsFinished()) {
 			stream.info.playing = false;
+			stream.info.finished = true;
+		}
 		return stream.voice->GetFramesPlayed() * VagBytesPerBlock / VagSamplesPerBlock;
 	}
 #endif
@@ -426,12 +435,16 @@ void RegisterStream(std::uint32_t streamId, std::uint32_t blockSize, float sampl
 	stream.voice.reset();
 	stream.info.ready = true;
 	stream.info.playing = false;
+	stream.info.finished = false;
 	stream.info.blockSize = blockSize;
 	stream.info.volume = 1.0f;
 	stream.info.channels = channels;
 	stream.info.sampleRate = static_cast<std::uint32_t>(std::fabs(sampleRate));
 	stream.info.position = 0;
+	stream.info.duration = 0.0f;
+	stream.info.path.clear();
 	stream.positionAtStart = 0;
+	stream.voiceStartFrame = 0;
 	stream.samples.clear();
 	stream.sampleRate = 0;
 }
@@ -483,9 +496,13 @@ bool LoadStream(std::uint32_t streamId, const char* path)
 	stream.samples = std::move(samples);
 	stream.sampleRate = sampleRate;
 	stream.info.sampleRate = sampleRate;
+	stream.info.duration = static_cast<float>(stream.samples.size() / stream.info.channels) / sampleRate;
+	stream.info.path = resolvedPath;
 	stream.info.position = 0;
 	stream.positionAtStart = 0;
+	stream.voiceStartFrame = 0;
 	stream.info.playing = false;
+	stream.info.finished = false;
 	return true;
 }
 
@@ -500,6 +517,7 @@ void PrepareStream(std::uint32_t streamId)
 		stream.voice->Rewind();
 	stream.info.position = 0;
 	stream.info.playing = false;
+	stream.info.finished = false;
 	stream.positionAtStart = 0;
 }
 
@@ -510,6 +528,7 @@ bool StartStream(std::uint32_t streamId)
 		return false;
 
 	Stream& stream = it->second;
+	stream.info.finished = false;
 #ifdef AUDIO_STREAM_DEVICE
 	if (!stream.samples.empty()) {
 		if (!CreateStreamVoice(stream) || !stream.voice->Start())
@@ -553,6 +572,30 @@ bool StopStream(std::uint32_t streamId)
 	return true;
 }
 
+bool SeekStream(std::uint32_t streamId, float seconds)
+{
+	auto it = streams.find(streamId);
+	if (it == streams.end() || !it->second.info.ready || !std::isfinite(seconds))
+		return false;
+
+	Stream& stream = it->second;
+	const bool wasPlaying = stream.info.playing;
+	const double frames = (std::max)(0.0, static_cast<double>(seconds) * stream.info.sampleRate);
+	std::uint64_t frame = static_cast<std::uint64_t>(frames);
+	if (!stream.samples.empty()) {
+		const std::uint64_t frameCount = stream.samples.size() / stream.info.channels;
+		frame = (std::min)(frame, frameCount > 0 ? frameCount - 1 : 0);
+	}
+	stream.info.position = frame * VagBytesPerBlock / VagSamplesPerBlock;
+	stream.positionAtStart = stream.info.position;
+	stream.startedAt = Clock::now();
+	stream.voice.reset();
+	stream.voiceStartFrame = frame;
+	stream.info.playing = false;
+	stream.info.finished = false;
+	return !wasPlaying || StartStream(streamId);
+}
+
 bool GetStreamInfo(std::uint32_t streamId, StreamInfo& out)
 {
 	auto it = streams.find(streamId);
@@ -563,6 +606,25 @@ bool GetStreamInfo(std::uint32_t streamId, StreamInfo& out)
 	stream.info.position = CurrentPosition(stream);
 	out = stream.info;
 	return true;
+}
+
+bool IsStreamFinished(std::uint32_t streamId)
+{
+	// Eden's stream state must report completion after the Windows voice drains
+	// so cinematic time can continue on the game timer.
+	StreamInfo info;
+	return GetStreamInfo(streamId, info) && info.finished;
+}
+
+std::vector<std::pair<std::uint32_t, StreamInfo>> GetStreams()
+{
+	std::vector<std::pair<std::uint32_t, StreamInfo>> result;
+	result.reserve(streams.size());
+	for (auto& [streamId, stream] : streams) {
+		stream.info.position = CurrentPosition(stream);
+		result.emplace_back(streamId, stream.info);
+	}
+	return result;
 }
 
 bool UnregisterStream(std::uint32_t streamId)

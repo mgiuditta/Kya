@@ -134,13 +134,14 @@ class MiniaudioStreamVoice final : public StreamVoice
 {
 public:
 	PcmSound pcm;
+	std::uint64_t startFrame = 0;
 
 	bool Start() override { return ma_sound_start(&pcm.sound) == MA_SUCCESS; }
 	void Stop() override { ma_sound_stop(&pcm.sound); }
 	void Rewind() override
 	{
 		ma_sound_stop(&pcm.sound);
-		ma_sound_seek_to_pcm_frame(&pcm.sound, 0);
+		ma_sound_seek_to_pcm_frame(&pcm.sound, startFrame);
 	}
 	bool SetVolume(float volume) override
 	{
@@ -221,11 +222,13 @@ std::unique_ptr<SampleVoice> CreateDeviceSampleVoice(const DecodedSample& sample
 }
 
 std::unique_ptr<StreamVoice> CreateDeviceStreamVoice(const std::vector<std::int16_t>& samples, std::uint32_t channels,
-	std::uint32_t sampleRate, float volume)
+	std::uint32_t sampleRate, float volume, std::uint64_t startFrame)
 {
 	auto voice = std::make_unique<MiniaudioStreamVoice>();
 	if (!voice->pcm.Initialize(samples.data(), samples.size() / channels, channels, sampleRate, 0, 0))
 		return nullptr;
+	voice->startFrame = startFrame;
+	ma_sound_seek_to_pcm_frame(&voice->pcm.sound, startFrame);
 	voice->SetVolume(volume);
 	return voice;
 }
