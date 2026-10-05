@@ -45,9 +45,7 @@ class CActorBlazer : public CActorAutonomous
 public:
 	static StateConfig _gStateCfg_BLA[12];
 
-	CActorBlazer(){
-		IMPLEMENTATION_GUARD_LOG()
-	}
+	CActorBlazer() {}
 
 	virtual void Create(ByteCode* pByteCode);
 	virtual void Init();

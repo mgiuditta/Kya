@@ -531,8 +531,49 @@ void CLightOmni::Activate()
 
 bool CLightOmni::DoLighting(LightingContext* pContext)
 {
-	IMPLEMENTATION_GUARD();
-	return false;
+	bool bLit;
+	float distSquared;
+	float dist;
+	float fallout0Squared;
+	float fallout1Squared;
+	edF32VECTOR4 toTarget;
+
+	toTarget = pContext->position - this->baseShape.position;
+	distSquared = toTarget.x * toTarget.x + toTarget.y * toTarget.y + toTarget.z * toTarget.z;
+	fallout1Squared = this->baseShape.fallout1 * this->baseShape.fallout1;
+
+	if (distSquared <= fallout1Squared) {
+		dist = sqrtf(distSquared);
+		fallout0Squared = this->baseShape.fallout0 * this->baseShape.fallout0;
+		toTarget = toTarget * (1.0f / dist);
+
+		if (distSquared < fallout0Squared) {
+			pContext->colorMultiplier = 1.0f;
+			*pContext->pLightDirection = (*pContext->pLightDirection) + (toTarget * -1.0f);
+		}
+		else {
+			pContext->colorMultiplier = 1.0f - (distSquared - fallout0Squared) / (fallout1Squared - fallout0Squared);
+			*pContext->pLightDirection = (*pContext->pLightDirection) + (toTarget * -pContext->colorMultiplier);
+		}
+
+		bLit = true;
+	}
+	else {
+		bLit = false;
+	}
+
+	if (bLit != false) {
+		if (pContext->colorMultiplier == 1.0f) {
+			*pContext->pLightAmbient = (*pContext->pLightAmbient) + this->colorModel.ambientColor;
+			*pContext->pLightColor = (*pContext->pLightColor) + this->colorModel.color;
+		}
+		else {
+			*pContext->pLightAmbient = (*pContext->pLightAmbient) + (this->colorModel.ambientColor * pContext->colorMultiplier);
+			*pContext->pLightColor = (*pContext->pLightColor) + (this->colorModel.color * pContext->colorMultiplier);
+		}
+	}
+
+	return bLit;
 }
 
 int CLightOmni::GetBaseShape(BaseShape** ppBaseShape)
