@@ -370,6 +370,18 @@ namespace Debug {
 					if (ImGui::IsItemClicked()) {
 						SelectCheckpoint(ref.pManager, ref.index);
 					}
+					// Respawn here through the game's own checkpoint reset, which moves the hero and switches sector.
+					ImGui::SameLine();
+					ImGui::PushID(pCheckpoint);
+					if (ImGui::SmallButton("Go")) {
+						EnqueueLevelManageTask([ref]() {
+							// Reset in the same tick: the checkpoint manager would re-activate the checkpoint
+							// whose zone the hero is still standing in before a faded reset runs.
+							ref.pManager->ActivateCheckpoint(ref.index);
+							CScene::_pinstance->Level_CheckpointReset();
+						});
+					}
+					ImGui::PopID();
 				}
 				ImGui::TreePop();
 			}
