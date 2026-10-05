@@ -536,6 +536,13 @@ namespace Renderer
 
 			void ProcessCommands()
 			{
+				// Either thread can get here first: the main thread drains leftovers when the
+				// render thread has not woken yet, so the begin must happen on this path too.
+				if (bShouldRecordBegin) {
+					RecordBeginCommandBuffer();
+					bShouldRecordBegin = false;
+				}
+
 				Command command;
 				while (commands.try_dequeue(command)) {
 					switch (command.type) {
@@ -586,11 +593,6 @@ namespace Renderer
 					ZONE_SCOPED_NAME("RenderThread::Run");
 
 					if (bShouldStop) break;
-
-					if (bShouldRecordBegin) {
-						RecordBeginCommandBuffer();
-						bShouldRecordBegin = false;
-					}
 
 					ProcessCommands();
 				}
