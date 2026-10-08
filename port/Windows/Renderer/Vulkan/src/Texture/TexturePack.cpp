@@ -65,9 +65,14 @@ namespace Renderer::TexturePack
 			return false;
 		}
 
+		// Mod files are untrusted: refuse anything past the Vulkan 2D limit every target supports (8192 on Apple GPUs).
 		int w = 0;
 		int h = 0;
 		int channels = 0;
+		if (!stbi_info(path.c_str(), &w, &h, &channels) || w <= 0 || h <= 0 || w > 8192 || h > 8192) {
+			return false;
+		}
+
 		stbi_uc* pData = stbi_load(path.c_str(), &w, &h, &channels, 4);
 		if (pData == nullptr) {
 			return false;
