@@ -21,10 +21,10 @@
 	url = https://github.com/wolfpld/tracy.git
 [submodule "src/EdenLib/edBank"]
 	path = src/EdenLib/edBank
-	url = https://github.com/Icey1717/edBank.git
+	url = https://github.com/mgiuditta/edBank.git
 [submodule "src/EdenLib/edFile"]
 	path = src/EdenLib/edFile
-	url = https://github.com/Icey1717/edFile.git
+	url = https://github.com/mgiuditta/edFile.git
 [submodule "port/ext/readerwriterqueue"]
 	path = port/ext/readerwriterqueue
 	url = https://github.com/cameron314/readerwriterqueue.git
