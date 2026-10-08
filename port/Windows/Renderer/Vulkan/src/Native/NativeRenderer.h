@@ -90,6 +90,8 @@ namespace Renderer
 		void ResizeFrameBuffer(int width, int height);
 		void ApplyPendingResizeIfNeeded();
 		VkExtent2D GetFrameBufferSize();
+		// Horizontal squeeze for 2D display lists so the 4:3 HUD keeps its shape on a wider screen.
+		void SetDisplayList2DScaleX(float scaleX);
 		void SetFullResolutionHeatCapture(bool enabled);
 		VkExtent2D GetHeatCaptureSize();
 		void Cleanup();

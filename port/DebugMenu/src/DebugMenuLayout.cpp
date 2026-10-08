@@ -1,6 +1,7 @@
 ﻿#include "DebugMenuLayout.h"
 #include "DebugMenu.h"
 #include "DebugRenderer.h"
+#include "DebugRendering.h"
 
 #include <profiling.h>
 #include <imgui.h>
@@ -10,7 +11,6 @@
 
 namespace Debug {
 
-	static constexpr float kGameAspectRatio = 640.0f / 480.0f;
 	static constexpr const char* kGameViewportWindowName = "GameViewport";
 
 	static ImGuiID gLeftDockId = 0;
@@ -105,13 +105,17 @@ namespace Debug {
 			return;
 		}
 
+		const float gameAspectRatio = Rendering::GetGameAspectRatio();
 		ImVec2 imageSize = available;
-		if ((imageSize.x / imageSize.y) > kGameAspectRatio) {
-			imageSize.x = imageSize.y * kGameAspectRatio;
+		if ((imageSize.x / imageSize.y) > gameAspectRatio) {
+			imageSize.x = imageSize.y * gameAspectRatio;
 		}
 		else {
-			imageSize.y = imageSize.x / kGameAspectRatio;
+			imageSize.y = imageSize.x / gameAspectRatio;
 		}
+
+		const ImVec2 pixelScale = ImGui::GetIO().DisplayFramebufferScale;
+		Rendering::UpdateGameResolution(imageSize.x * pixelScale.x, imageSize.y * pixelScale.y);
 
 		const ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
 		const ImVec2 centeredScreenPos(

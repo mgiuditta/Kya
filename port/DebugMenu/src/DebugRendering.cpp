@@ -13,6 +13,8 @@
 #include "edDlist.h"
 #include "Rendering/DisplayList.h"
 #include "VulkanRenderer.h"
+#include "CameraViewManager.h"
+#include "Settings.h"
 #include <algorithm>
 
 // Make sure these external variables are accessible
@@ -31,6 +33,8 @@ namespace Debug {
 		static Debug::Setting<int> gRenderHeight = { "Render Resolution Height", Renderer::Native::kDefaultHeight };
 		static Debug::Setting<bool> gAutoApplyResolution = { "Auto Apply Resolution", false };
 		static Debug::Setting<bool> gFullResolutionHeatCapture = { "Full Resolution Heat FX Capture", false };
+		static Debug::Setting<bool> gWidescreen = { "Widescreen", true };
+		static Debug::Setting<bool> gMatchWindowResolution = { "Match Window Resolution", true };
 
 		// In DebugRendering.cpp, add this function:
 		void ShowDisplayListViewer(bool* bOpen)
@@ -179,6 +183,16 @@ void Debug::Rendering::DrawContents()
 		ImVec2 imageSize = Debug::GetGameViewportImageSize();
 		ImGui::Text("Viewport Image: %.0f x %.0f", imageSize.x, imageSize.y);
 
+		if (gWidescreen.DrawImguiControl()) {
+			gWidescreen.UpdateValue();
+		}
+		if (gMatchWindowResolution.DrawImguiControl()) {
+			gMatchWindowResolution.UpdateValue();
+		}
+		if (ImGui::IsItemHovered()) {
+			ImGui::SetTooltip("Render at the on-screen image size in pixels. Overrides the manual size below.");
+		}
+
 		ImGui::Spacing();
 
 		static int sPendingWidth = static_cast<int>(renderSize.width);
@@ -287,6 +301,26 @@ void Debug::Rendering::Init()
 bool Debug::Rendering::GetEnableEmulatedRendering()
 {
 	return gEnableEmulatedRendering;
+}
+
+float Debug::Rendering::GetGameAspectRatio()
+{
+	return gWidescreen ? 16.0f / 9.0f : 4.0f / 3.0f;
+}
+
+void Debug::Rendering::UpdateGameResolution(float imageWidth, float imageHeight)
+{
+	// Same values CSettings::SetSettingsToGlobal writes; forced every frame because save load and pause exit reapply the saved flag.
+	// ponytail: written from the UI thread, the game reads it next frame; a one-frame stale aspect is harmless.
+	gSettings.bWidescreen = gWidescreen;
+	Renderer::Native::SetDisplayList2DScaleX(gWidescreen ? 0.75f : 1.0f);
+	if (CCameraManager::_gThis != nullptr) {
+		CCameraManager::_gThis->aspectRatio = gWidescreen ? 1.777778f : 1.333333f;
+	}
+
+	if (gMatchWindowResolution && imageWidth >= 1.0f && imageHeight >= 1.0f) {
+		Renderer::Native::ResizeFrameBuffer(static_cast<int>(imageWidth + 0.5f), static_cast<int>(imageHeight + 0.5f));
+	}
 }
 
 namespace Debug {

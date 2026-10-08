@@ -505,6 +505,12 @@ namespace Renderer::Native::DisplayList
 // Implementations from "displaylist.h"
 
 static bool bCalledBegin = false;
+static float g2DScaleX = 1.0f;
+
+void Renderer::Native::SetDisplayList2DScaleX(float scaleX)
+{
+	g2DScaleX = scaleX;
+}
 
 void Renderer::DisplayList::Begin2D(short viewportWidth, short viewportHeight, uint32_t mode)
 {
@@ -576,6 +582,11 @@ void Renderer::DisplayList::SetVertex(float x, float y, float z, uint32_t skip)
 
 	// Convert x, y to normalized viewport coords for vulkan between -1.0 and 1.0
 	float newx = (2.0f * x / gViewport.width) - 1.0f;
+	// ponytail: vertices on the screen edge stay there so fades and bands still cover a wide screen;
+	// a quad with one edge vertex and one inner vertex stretches. Tag full-screen prims if that shows up.
+	if (x > 0.0f && x < gViewport.width) {
+		newx *= g2DScaleX;
+	}
 	float newy = (2.0f * y / gViewport.height) - 1.0f;
 
 	Renderer::DisplayListVertex vertex{};
