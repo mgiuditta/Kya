@@ -2864,9 +2864,8 @@ void CActorWolfen::BehaviourGuardArea_Manage(CBehaviourGuardArea* pBehaviour)
 															StateWolfenBreakObject();
 														}
 														else {
-															if (iVar11 == 0x90) {
-																IMPLEMENTATION_GUARD(
-																StateGuardAreaWP_OrientPath(this, (int)pBehaviour);)
+															if (iVar11 == WOLFEN_STATE_GUARD_ORIENT_PATH) {
+																StateGuardAreaWP_OrientPath(pBehaviour);
 															}
 															else {
 																if (iVar11 == WOLFEN_STATE_GUARD_WAIT) {
@@ -5959,6 +5958,112 @@ void CActorWolfen::StateWolfenBreakObject()
 	return;
 }
 
+void CActorWolfen::StateGuardAreaWP_OrientPath(CBehaviourGuardArea* pBehaviour)
+{
+	bool bVar1;
+	edF32VECTOR4* peVar2;
+	CPathFinderClient* pClient;
+	int iVar3;
+	float fVar4;
+	CActorMovParamsIn movParamsIn;
+	CActorMovParamsOut movParamsOut;
+	edF32VECTOR4 eStack176;
+	edF32VECTOR4 eStack96;
+	edF32MATRIX4 eStack80;
+	edF32VECTOR4 local_10;
+
+	if (this->pTiedActor != (CActor*)0x0) {
+		this->pTiedActor->SV_ComputeDiffMatrixFromInit(&eStack80);
+		peVar2 = pBehaviour->pathFollowReader.GetWayPoint();
+		edF32Matrix4MulF32Vector4Hard(&local_10, &eStack80, peVar2);
+		edF32Vector4SubHard(&eStack96, &local_10, &this->currentLocation);
+		edF32Vector4NormalizeHard(&pBehaviour->field_0xa0, &eStack96);
+	}
+
+	fVar4 = GetAngleYFromVector(&pBehaviour->field_0xa0);
+	fVar4 = edF32GetAnglesDelta(fVar4, this->rotationEuler.y);
+	if (fVar4 <= 0.0f) {
+		fVar4 = -fVar4;
+	}
+
+	if (fVar4 <= 0.001f) {
+		if (pBehaviour->field_0x98 < (this->walkSpeed + this->runSpeed) * 0.5f) {
+			SetState(WOLFEN_STATE_GUARD_WALK_TO, 7);
+		}
+		else {
+			SetState(WOLFEN_STATE_GUARD_WALK_TO, 6);
+		}
+	}
+	else {
+		movParamsOut.flags = 0;
+
+		movParamsIn.flags = 0;
+		movParamsIn.pRotation = (edF32VECTOR4*)0x0;
+		movParamsIn.speed = 0.0f;
+		movParamsIn.rotSpeed = static_cast<float>(GetWalkRotSpeed());
+		movParamsIn.flags = movParamsIn.flags | 2;
+		movParamsIn.acceleration = GetWalkAcceleration();
+		movParamsIn.speed = 0.0f;
+		movParamsIn.pRotation = &pBehaviour->field_0xa0;
+		movParamsIn.flags = movParamsIn.flags | 0x400;
+		edF32Vector4AddHard(&eStack176, &this->currentLocation, movParamsIn.pRotation);
+		if ((this->combatFlags_0xb78 & 0x400) == 0) {
+		LAB_00177508:
+			bVar1 = false;
+		}
+		else {
+			pClient = GetPathfinderClientAlt();
+			if (pClient->id != -1) {
+				pClient = GetPathfinderClientAlt();
+				bVar1 = pClient->IsValidPosition(&this->currentLocation);
+
+				if (bVar1 == false) goto LAB_00177508;
+			}
+
+			bVar1 = true;
+		}
+
+		if (bVar1) {
+			if ((this->combatFlags_0xb78 & 0x80000) == 0) {
+				this->combatFlags_0xb78 = this->combatFlags_0xb78 | 0x80000;
+			}
+
+			this->pathOriginPosition = this->currentLocation;
+		}
+
+		SV_AUT_MoveTo(&movParamsOut, &movParamsIn, &eStack176);
+	}
+
+	this->dynamic.speed = 0.0f;
+
+	ManageDyn(4.0f, 0x1002023b, (CActorsTable*)0x0);
+
+	iVar3 = pBehaviour->TestState_001f09b0();
+	if (iVar3 == -1) {
+		iVar3 = pBehaviour->TestState_001f0a70();
+		if (iVar3 == -1) {
+			iVar3 = pBehaviour->TestState_001f0a90();
+			if (iVar3 == -1) {
+				iVar3 = pBehaviour->TestState_001f0a30();
+				if (iVar3 != -1) {
+					SetState(iVar3, -1);
+				}
+			}
+			else {
+				SetState(iVar3, -1);
+			}
+		}
+		else {
+			SetState(iVar3, -1);
+		}
+	}
+	else {
+		SetState(iVar3, -1);
+	}
+
+	return;
+}
+
 void CActorWolfen::StateGuardAreaWP_Wait(CBehaviourGuardArea* pBehaviour)
 {
 	bool bVar1;
@@ -6023,7 +6128,7 @@ void CActorWolfen::StateGuardAreaWP_Wait(CBehaviourGuardArea* pBehaviour)
 				else {
 					edF32Vector4SubHard(&eStack96, &local_10, &this->currentLocation);
 					edF32Vector4NormalizeHard(&pBehaviour->field_0xa0, &eStack96);
-					SetState(0x90, -1);
+					SetState(WOLFEN_STATE_GUARD_ORIENT_PATH, -1);
 				}
 			}
 		}

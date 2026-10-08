@@ -59,6 +59,7 @@ void edF32Matrix4GetInverseOrthoHard(edF32MATRIX4* m0, edF32MATRIX4* m1);
 #define WOLFEN_STATE_GUARD_STOP 0x8d
 #define WOLFEN_STATE_GUARD_ORIENT_WP 0x8e
 #define WOLFEN_STATE_GUARD_WAIT 0x8f
+#define WOLFEN_STATE_GUARD_ORIENT_PATH 0x90
 #define WOLFEN_STATE_RELOAD 0x91
 #define WOLFEN_STATE_SNIPER_SCAN 0x93
 #define WOLFEN_STATE_AIM 0x94
@@ -1220,6 +1221,7 @@ public:
 	void StateWolfenBoomyHit();
 	void StateWolfenBreakObject();
 
+	void StateGuardAreaWP_OrientPath(CBehaviourGuardArea* pBehaviour);
 	void StateGuardAreaWP_Wait(CBehaviourGuardArea* pBehaviour);
 	void StateGuardAreaWP_OrientWP(CBehaviourGuardArea* pBehaviour);
 	void StateGuardAreaWP_Stop(CBehaviourGuardArea* pBehaviour);
