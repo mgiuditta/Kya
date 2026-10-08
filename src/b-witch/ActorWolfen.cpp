@@ -9449,8 +9449,8 @@ void CBehaviourWolfen::TermState(int oldState, int newState)
 			peVar1 = (peVar7->currentAnimDesc).state.pAnimKeyTableEntry;
 			if ((peVar1->field_0x4.asKey == 1) && (peVar1->keyIndex_0x8.asKey == 2)) {
 				float* pAnimValues = peVar1->pData + peVar1->keyIndex_0x8.asKey;
-				pAnimValues[2] = 0.5f;
-				pAnimValues[3] = 0.5f;
+				pAnimValues[0] = 0.5f;
+				pAnimValues[1] = 0.5f;
 			}
 
 			pAnim->anmBinMetaAnimator.SetAnimOnLayer(-1, iVar5, 0xffffffff);
