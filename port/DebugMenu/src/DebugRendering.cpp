@@ -303,19 +303,21 @@ bool Debug::Rendering::GetEnableEmulatedRendering()
 	return gEnableEmulatedRendering;
 }
 
-float Debug::Rendering::GetGameAspectRatio()
+// Widescreen fills the window whatever its shape, but never narrower than 4:3.
+float Debug::Rendering::GetGameAspectRatio(float windowAspectRatio)
 {
-	return gWidescreen ? 16.0f / 9.0f : 4.0f / 3.0f;
+	return gWidescreen ? std::max(windowAspectRatio, 4.0f / 3.0f) : 4.0f / 3.0f;
 }
 
 void Debug::Rendering::UpdateGameResolution(float imageWidth, float imageHeight)
 {
-	// Same values CSettings::SetSettingsToGlobal writes; forced every frame because save load and pause exit reapply the saved flag.
+	// CSettings::SetSettingsToGlobal writes 1.333333 or 1.777778; forced every frame because save load and pause exit reapply the saved flag.
 	// ponytail: written from the UI thread, the game reads it next frame; a one-frame stale aspect is harmless.
+	const float aspectRatio = (imageWidth >= 1.0f && imageHeight >= 1.0f) ? imageWidth / imageHeight : 4.0f / 3.0f;
 	gSettings.bWidescreen = gWidescreen;
-	Renderer::Native::SetDisplayList2DScaleX(gWidescreen ? 0.75f : 1.0f);
+	Renderer::Native::SetDisplayList2DScaleX(gWidescreen ? (4.0f / 3.0f) / aspectRatio : 1.0f);
 	if (CCameraManager::_gThis != nullptr) {
-		CCameraManager::_gThis->aspectRatio = gWidescreen ? 1.777778f : 1.333333f;
+		CCameraManager::_gThis->aspectRatio = gWidescreen ? aspectRatio : 1.333333f;
 	}
 
 	if (gMatchWindowResolution && imageWidth >= 1.0f && imageHeight >= 1.0f) {

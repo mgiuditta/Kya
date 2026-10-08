@@ -6,7 +6,7 @@ namespace Debug {
 		void ShowMenu(bool* bOpen);
 		void Init();
 		bool GetEnableEmulatedRendering();
-		float GetGameAspectRatio();
+		float GetGameAspectRatio(float windowAspectRatio);
 		void UpdateGameResolution(float imageWidth, float imageHeight);
 	}
 }

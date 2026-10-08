@@ -105,7 +105,7 @@ namespace Debug {
 			return;
 		}
 
-		const float gameAspectRatio = Rendering::GetGameAspectRatio();
+		const float gameAspectRatio = Rendering::GetGameAspectRatio(available.x / available.y);
 		ImVec2 imageSize = available;
 		if ((imageSize.x / imageSize.y) > gameAspectRatio) {
 			imageSize.x = imageSize.y * gameAspectRatio;
