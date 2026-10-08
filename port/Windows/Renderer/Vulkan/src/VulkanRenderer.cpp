@@ -434,7 +434,7 @@ private:
 		windowWidth = WIDTH;
 		windowHeight = HEIGHT;
 
-		window = glfwCreateWindow(windowWidth, windowHeight, "Vulkan", nullptr, nullptr);
+		window = glfwCreateWindow(windowWidth, windowHeight, "Kya: Dark Lineage", nullptr, nullptr);
 		glfwSetWindowUserPointer(window, this);
 		glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 		

@@ -1,6 +1,8 @@
 #!/bin/bash
 # Builds a self-contained Kya.app from the macos-release build and the game data in bin/MAC.
 # Saves, settings and logs go to ~/Library/Application Support/Kya, not into the bundle.
+# Movies are left out: the PC build always defines SKIP_MOVIES. The IOP modules and the
+# PS2 executable are not read at runtime either. An icon is used if assets/Kya.icns exists.
 # Usage: tools/macos/make_app.sh [output dir, default out/app]
 set -euo pipefail
 
@@ -9,7 +11,7 @@ OUT="${1:-$ROOT/out/app}"
 SDK="${VULKAN_SDK:-$HOME/VulkanSDK/1.4.363.0/macOS}"
 BIN="$ROOT/bin/MAC"
 APP="$OUT/Kya.app"
-DATA=(CDEURO IOP SLES_514.73 SYSTEM.CNF BWITCH.INI shaders)
+DATA=(CDEURO BWITCH.INI shaders)
 
 [ -x "$BIN/Kya_RelWithDebInfo" ] || { echo "Build first: cmake --preset macos-release && cmake --build out/build/macos-release"; exit 1; }
 for d in "${DATA[@]}"; do [ -e "$BIN/$d" ] || { echo "Missing game data: $BIN/$d"; exit 1; }; done
@@ -31,7 +33,8 @@ cat > "$APP/Contents/Resources/vulkan/icd.d/MoltenVK_icd.json" <<'JSON'
 }
 JSON
 
-for d in "${DATA[@]}"; do ditto "$BIN/$d" "$APP/Contents/Resources/game/$d"; done
+rsync -a --exclude 'MOVIES/' --exclude '*.lastWriteTime' "${DATA[@]/#/$BIN/}" "$APP/Contents/Resources/game/"
+[ -f "$ROOT/assets/Kya.icns" ] && cp "$ROOT/assets/Kya.icns" "$APP/Contents/Resources/Kya.icns"
 
 # The game reads and writes relative to its working directory, so run it from a
 # per-user folder that links back to the read-only data inside the bundle.
@@ -40,6 +43,7 @@ cat > "$APP/Contents/MacOS/Kya" <<'SH'
 CONTENTS="$(cd "$(dirname "$0")/.." && pwd)"
 HOME_DIR="$HOME/Library/Application Support/Kya"
 mkdir -p "$HOME_DIR"
+find "$HOME_DIR" -maxdepth 1 -type l ! -exec test -e {} \; -delete
 for d in "$CONTENTS/Resources/game/"*; do ln -sfn "$d" "$HOME_DIR/$(basename "$d")"; done
 cd "$HOME_DIR"
 export VK_ICD_FILENAMES="$CONTENTS/Resources/vulkan/icd.d/MoltenVK_icd.json"
@@ -57,6 +61,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 	<key>CFBundleDisplayName</key><string>Kya: Dark Lineage</string>
 	<key>CFBundleIdentifier</key><string>local.kya.port</string>
 	<key>CFBundleExecutable</key><string>Kya</string>
+	<key>CFBundleIconFile</key><string>Kya</string>
 	<key>CFBundlePackageType</key><string>APPL</string>
 	<key>CFBundleShortVersionString</key><string>0.1</string>
 	<key>LSMinimumSystemVersion</key><string>13.0</string>
