@@ -103,6 +103,7 @@ public:
 	void FUN_00393470();
 
 	void FUN_00394250(CActorNativ* pNativ);
+	void FUN_003944e0(CActorNativ* pNativ, int index);
 	void FUN_00394d00(CActorNativ* pNativ);
 
 	edF32VECTOR4* FUN_00393230(CActor* pActor);

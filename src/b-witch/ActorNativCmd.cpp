@@ -1580,8 +1580,7 @@ void CActorNativCmd::FUN_00394250(CActorNativ* pNativ)
 							return;
 						}
 
-						IMPLEMENTATION_GUARD(
-						FUN_003944e0(pNativ, local_50.field_0x4);)
+						FUN_003944e0(pNativ, local_50.field_0x4);
 						return;
 					}
 					iVar10 = iVar10 + 1;
@@ -1594,6 +1593,253 @@ void CActorNativCmd::FUN_00394250(CActorNativ* pNativ)
 	return;
 }
 
+
+void CActorNativCmd::FUN_003944e0(CActorNativ* pNativ, int index)
+{
+	S_ACTOR_STREAM_REF* pSVar1;
+	CTalkParam* pCVar2;
+	CActorNativ* pCVar3;
+	CActorNativ* pPartner = (CActorNativ*)0x0;
+	SpeakSubObj* pSpeakSubObj;
+	uint uVar4;
+	bool bVar5;
+	int iVar6;
+	int iVar7;
+	int iVar8;
+	int iVar9;
+	int nbNativs;
+	float fVar10;
+	float fVar11;
+	CActorNativMsgParam_0xe local_40;
+	edF32VECTOR4 eStack48;
+	edF32VECTOR4 eStack32;
+
+	iVar8 = 0;
+	pSpeakSubObj = (pNativ->behaviourSpeak).aSubObjs + index;
+
+	pSVar1 = this->aNativs;
+	if (pSVar1 == (S_ACTOR_STREAM_REF*)0x0) {
+		nbNativs = 0;
+	}
+	else {
+		nbNativs = pSVar1->entryCount;
+	}
+
+	for (iVar6 = 0; iVar6 < this->nbTalkParams; iVar6 = iVar6 + 1) {
+		pCVar2 = (CTalkParam*)0x0;
+		if (iVar6 < this->nbTalkParams) {
+			pCVar2 = this->aTalkParams + iVar6;
+		}
+
+		if (((pCVar2->field_0x10 != 0) || (pCVar2->totalTime != 0.0f)) || (bVar5 = true, pCVar2->field_0x1c != 0)) {
+			bVar5 = false;
+		}
+
+		if (bVar5) goto LAB_003945e0;
+	}
+
+	iVar6 = -1;
+LAB_003945e0:
+	if (iVar6 == -1) {
+		return;
+	}
+
+	for (iVar7 = 0; iVar7 < nbNativs; iVar7 = iVar7 + 1) {
+		pCVar3 = static_cast<CActorNativ*>(this->aNativs->aEntries[iVar7].Get());
+		uVar4 = pCVar3->GetStateFlags(pCVar3->actorState);
+
+		if ((((uVar4 & 0x1000) == 0) && (pCVar3 != pNativ)) && (pCVar3->FUN_00162830() != false)) {
+			if (pCVar3->field_0x3f0 == this) {
+				iVar8 = iVar8 + 1;
+			}
+		}
+	}
+
+	if (0 < iVar8) {
+		iVar9 = CScene::Rand() % iVar8;
+		iVar8 = 0;
+
+		for (iVar7 = 0; iVar7 < nbNativs; iVar7 = iVar7 + 1) {
+			pCVar3 = static_cast<CActorNativ*>(this->aNativs->aEntries[iVar7].Get());
+			uVar4 = pCVar3->GetStateFlags(pCVar3->actorState);
+
+			if ((((uVar4 & 0x1000) == 0) && (pCVar3 != pNativ)) && (pCVar3->FUN_00162830() != false)) {
+				if (pCVar3->field_0x3f0 == this) {
+					if (iVar8 == iVar9) {
+						pPartner = pCVar3;
+					}
+
+					iVar8 = iVar8 + 1;
+				}
+			}
+		}
+
+		pCVar2 = (CTalkParam*)0x0;
+		if (iVar6 < this->nbTalkParams) {
+			pCVar2 = this->aTalkParams + iVar6;
+		}
+
+		if (pCVar2->field_0x10 + 1 <= pCVar2->nbSubObj) {
+			pCVar2->field_0x8[pCVar2->field_0x10].pNativ = pNativ;
+			pCVar2->field_0x10 = pCVar2->field_0x10 + 1;
+		}
+
+		pCVar2 = (CTalkParam*)0x0;
+		if (iVar6 < this->nbTalkParams) {
+			pCVar2 = this->aTalkParams + iVar6;
+		}
+
+		if (pCVar2->field_0x10 + 1 <= pCVar2->nbSubObj) {
+			pCVar2->field_0x8[pCVar2->field_0x10].pNativ = pPartner;
+			pCVar2->field_0x10 = pCVar2->field_0x10 + 1;
+		}
+
+		pCVar2 = (CTalkParam*)0x0;
+		if (iVar6 < this->nbTalkParams) {
+			pCVar2 = this->aTalkParams + iVar6;
+		}
+
+		pCVar2->field_0x1c = 1;
+
+		pCVar2 = (CTalkParam*)0x0;
+		if (iVar6 < this->nbTalkParams) {
+			pCVar2 = this->aTalkParams + iVar6;
+		}
+
+		pCVar2->field_0x18 = pSpeakSubObj->field_0x4;
+
+		pCVar2 = (CTalkParam*)0x0;
+		if (iVar6 < this->nbTalkParams) {
+			pCVar2 = this->aTalkParams + iVar6;
+		}
+
+		pCVar3 = (CActorNativ*)0x0;
+		if (1 < pCVar2->nbSubObj) {
+			pCVar3 = pCVar2->field_0x8[1].pNativ;
+		}
+
+		eStack48 = pCVar3->currentLocation;
+
+		pCVar2 = (CTalkParam*)0x0;
+		if (iVar6 < this->nbTalkParams) {
+			pCVar2 = this->aTalkParams + iVar6;
+		}
+
+		for (iVar7 = 0; iVar7 < pCVar2->nbSubObj; iVar7 = iVar7 + 1) {
+			pCVar3 = (CActorNativ*)0x0;
+			if (iVar7 < pCVar2->nbSubObj) {
+				pCVar3 = pCVar2->field_0x8[iVar7].pNativ;
+			}
+
+			if (iVar7 == 1) {
+				fVar11 = 0.5f;
+			}
+			else {
+				fVar11 = 2.2f;
+			}
+
+			edF32Vector4SubHard(&eStack32, &eStack48, &pCVar3->currentLocation);
+			eStack32.y = 0.0f;
+			fVar10 = edF32Vector4GetDistHard(&eStack32);
+
+			if (fVar10 < fVar11) {
+				pCVar2->field_0x8[iVar7].field_0x4 = 3;
+			}
+			else {
+				pCVar2->field_0x8[iVar7].field_0x4 = 2;
+			}
+		}
+
+		pCVar2->FUN_00392d90();
+
+		pCVar2 = (CTalkParam*)0x0;
+		if (iVar6 < this->nbTalkParams) {
+			pCVar2 = this->aTalkParams + iVar6;
+		}
+
+		pCVar2->FUN_00392e30(&eStack48);
+
+		iVar7 = 0;
+		while (true) {
+			pCVar2 = (CTalkParam*)0x0;
+			if (iVar6 < this->nbTalkParams) {
+				pCVar2 = this->aTalkParams + iVar6;
+			}
+
+			if (pCVar2->nbSubObj <= iVar7) break;
+
+			pCVar3 = (CActorNativ*)0x0;
+			if (iVar7 < pCVar2->nbSubObj) {
+				pCVar3 = pCVar2->field_0x8[iVar7].pNativ;
+			}
+
+			pCVar2 = this->aTalkParams + iVar6;
+
+			iVar8 = 0;
+			if (iVar7 < pCVar2->nbSubObj) {
+				iVar8 = pCVar2->field_0x8[iVar7].field_0x4;
+			}
+
+			local_40.type = 5;
+			if (iVar8 == 6) {
+				local_40.type = 0;
+			}
+			else {
+				if (iVar8 == 5) {
+					local_40.type = 0xd;
+				}
+				else {
+					if (iVar8 == 4) {
+						local_40.type = 9;
+					}
+					else {
+						if (iVar8 == 3) {
+							local_40.type = 6;
+						}
+						else {
+							if (iVar8 != 2) {
+								local_40.type = 0;
+							}
+						}
+					}
+				}
+			}
+
+			local_40.field_0x4 = index;
+			local_40.field_0x8 = iVar6;
+			local_40.field_0x18 = &eStack48;
+
+			pCVar2 = (CTalkParam*)0x0;
+			if (iVar6 < this->nbTalkParams) {
+				pCVar2 = this->aTalkParams + iVar6;
+			}
+
+			local_40.field_0x14 = pCVar2->FUN_00392ad0(iVar7);
+
+			if (pNativ == pCVar3) {
+				pCVar2 = (CTalkParam*)0x0;
+				if (iVar6 < this->nbTalkParams) {
+					pCVar2 = this->aTalkParams + iVar6;
+				}
+
+				local_40.field_0xc = pCVar2->FUN_00392860(iVar7, 1);
+			}
+			else {
+				pCVar2 = (CTalkParam*)0x0;
+				if (iVar6 < this->nbTalkParams) {
+					pCVar2 = this->aTalkParams + iVar6;
+				}
+
+				local_40.field_0xc = pCVar2->FUN_00392860(iVar7, 0);
+			}
+
+			DoMessage(pCVar3, MESSAGE_NATIV_CMD, &local_40);
+			iVar7 = iVar7 + 1;
+		}
+	}
+
+	return;
+}
 
 void CActorNativCmd::FUN_00394d00(CActorNativ* pNativ)
 {

@@ -2199,6 +2199,31 @@ bool CActorNativ::FUN_00162750()
 
 
 
+bool CActorNativ::FUN_00162830()
+{
+	int iVar1;
+	bool bVar2;
+	CBehaviour* pCVar3;
+
+	if ((this->field_0x370 - 5 < 2) || (this->field_0x370 == 7)) {
+		bVar2 = true;
+	}
+	else {
+		bVar2 = false;
+	}
+
+	if ((!bVar2) || (bVar2 = true, this->bHasObject == 0)) {
+		bVar2 = false;
+	}
+
+	if ((((!bVar2) && (pCVar3 = GetBehaviour(NATIVE_BEHAVIOUR_SPEAK), pCVar3 != (CBehaviour*)0x0)) &&
+		((this->flags & 4) != 0)) && (((iVar1 = this->curBehaviourId, iVar1 == 3 || (iVar1 == 5)) || (iVar1 == 6)))) {
+		return true;
+	}
+
+	return false;
+}
+
 bool CActorNativ::CanSpeak()
 {
 	bool bVar1;

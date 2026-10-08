@@ -412,6 +412,7 @@ public:
 	float FUN_00164070();
 	void* FUN_0036f330(int param_2);
 	bool FUN_00162750();
+	bool FUN_00162830();
 
 	bool CanSpeak();
 
