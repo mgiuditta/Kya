@@ -77,6 +77,8 @@ set (SOURCES
 	"Vulkan/src/Texture/TextureUpdate.cpp"
 	"Vulkan/src/Texture/TextureUpscale.h"
 	"Vulkan/src/Texture/TextureUpscale.cpp"
+	"Vulkan/src/Texture/TexturePack.h"
+	"Vulkan/src/Texture/TexturePack.cpp"
 
 	"include/renderer.h"
 	"include/displaylist.h"
@@ -191,6 +193,8 @@ target_include_directories(Renderer PUBLIC ${Vulkan_INCLUDE_DIRS} ${CMAKE_CURREN
 target_include_directories(Renderer PUBLIC "include")
 
 target_include_directories(Renderer PRIVATE "Shaders/config")
+# Texture packs: xxHash from TextureUpload, stb from tracy and glfw.
+set_source_files_properties("Vulkan/src/Texture/TexturePack.cpp" PROPERTIES INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/Vulkan/src/pcsx2/TextureUpload/ext/xxHash;${CMAKE_SOURCE_DIR}/port/ext/tracy/profiler/src;${CMAKE_CURRENT_LIST_DIR}/ext/glfw/deps")
 
 add_dependencies(Renderer Shaders)
 

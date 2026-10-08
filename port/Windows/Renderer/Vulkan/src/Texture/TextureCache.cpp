@@ -12,6 +12,7 @@
 #include "log.h"
 #include "TextureCacheRowOffset.h"
 #include "TextureUpload.h"
+#include "TexturePack.h"
 
 static const int* rowOffset[8] = {
 	rowOffset32,
@@ -1083,10 +1084,27 @@ void Renderer::SimpleTexture::CreateRenderer(const CombinedImageData& imageData)
 	bitmap.Log("Uploading texture TEX - ");
 	auto pBuffer = TextureUpload::UploadTexture(reinterpret_cast<uint8_t*>(bitmap.pImage), bitmap.bitBltBuf.CMD, bitmap.trxPos.CMD, bitmap.trxReg.CMD, imageData.registers.tex.CMD);
 
+	const uint64_t packHash = TexturePack::Hash(pBuffer->Get(), bitmap.canvasWidth, bitmap.canvasHeight, pBuffer->Width());
+	TexturePack::DumpIfEnabled(packHash, pBuffer->Get(), bitmap.canvasWidth, bitmap.canvasHeight, pBuffer->Width(), GetName());
+
 	pRenderer = new PS2::GSSimpleTexture();
 	pRenderer->width = bitmap.canvasWidth;
 	pRenderer->height = bitmap.canvasHeight;
 	pRenderer->imageData = bitmap;
+
+	// The original buffer stays assigned for RevertTexture and the upscaler.
+	std::vector<uint8_t> packPixels;
+	uint32_t packWidth = 0;
+	uint32_t packHeight = 0;
+	if (TexturePack::LoadReplacement(packHash, packPixels, packWidth, packHeight)) {
+		pRenderer->width = packWidth;
+		pRenderer->height = packHeight;
+		pRenderer->CreateResources(false);
+		pRenderer->AssignUploadBuffer(std::move(pBuffer));
+		pRenderer->UploadData(static_cast<int>(packPixels.size()), packPixels.data());
+		return;
+	}
+
 	pRenderer->CreateResources(false);
 	pRenderer->AssignUploadBuffer(std::move(pBuffer));
 	pRenderer->UploadDataFromBuffer();
