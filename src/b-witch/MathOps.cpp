@@ -1,6 +1,7 @@
 #include "MathOps.h"
 #include <math.h>
 #include <cmath>
+#include <cfloat>
 
 extern const float edFCosinus[8193] = {
 #include "Ps2CosineTable.inc"
@@ -275,7 +276,8 @@ float edF32Vector4NormalizeHard(edF32VECTOR4* v0, edF32VECTOR4* v1)
 	y = v1->y;
 	z = v1->z;
 	const float magnitude = sqrtf(x * x + y * y + z * z) + 0.0f;
-	invMagnitude = 1.0f / magnitude;
+	// The VU0 divide saturates to FLT_MAX instead of inf, so a zero vector stays zero on PS2 rather than going NaN.
+	invMagnitude = (magnitude == 0.0f) ? FLT_MAX : 1.0f / magnitude;
 	v0->x = x * invMagnitude;
 	v0->y = y * invMagnitude;
 	v0->z = z * invMagnitude;
