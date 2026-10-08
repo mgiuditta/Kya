@@ -53,8 +53,8 @@ namespace Debug {
 		ZONE_SCOPED;
 		auto* pSectorManager = CScene::ptable.g_SectorManager_00451670;
 		auto* pTimer = GetTimer();
-		const double deltaTime = DebugMenu::GetDeltaTime();
-		const double fps = deltaTime > 0.0 ? (1.0 / deltaTime) : 0.0;
+		// Averaged: a single frame's 1/dt swings wildly while the limiter catches up.
+		const double fps = ImGui::GetIO().Framerate;
 
 		if (CLevelScheduler::gThis != nullptr) {
 			gToolbarLevelId = CLevelScheduler::gThis->currentLevelID;
