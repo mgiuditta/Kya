@@ -200,12 +200,13 @@ void CActorEgg::BehaviourEggMove_Manage()
 	float fVar9;
 	float fVar10;
 
+	pHero = CActorHero::_gThis;
+
 	switch (this->actorState) {
 	case 5:
 		ManageDyn(4.0f, 0, (CActorsTable*)0x0);
 
 		pCVar6 = CScene::ptable.g_EventManager_006f5080;
-		pHero = CActorHero::_gThis;
 		zoneId = this->field_0x1dc;
 
 		if (zoneId == 0xffffffff) {
