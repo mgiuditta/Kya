@@ -423,6 +423,10 @@ private:
 	}
 
 	void initWindow() {
+#ifdef __APPLE__
+		// Run from an .app, GLFW would chdir into Contents/Resources; the game reads and writes relative to the launcher's directory.
+		glfwInitHint(GLFW_COCOA_CHDIR_RESOURCES, GLFW_FALSE);
+#endif
 		glfwInit();
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);

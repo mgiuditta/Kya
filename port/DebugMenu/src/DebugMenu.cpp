@@ -1,4 +1,5 @@
 ﻿#include "DebugMenu.h"
+#include <cstdlib>
 #include "DebugRenderer.h"
 
 #include <profiling.h>
@@ -109,7 +110,8 @@ std::vector<std::function<void()>>& Debug::StartupRegisterer::GetCallbacks()
 extern bool bOther;
 
 namespace Debug {
-	static bool bShowMenus = true;
+	// The macOS app bundle sets KYA_HIDE_DEBUG so players start on the plain game view; F10 still toggles.
+	static bool bShowMenus = getenv("KYA_HIDE_DEBUG") == nullptr;
 
 	static std::unordered_map<const PS2::GSTexEntry*, ImageTextureID> debugTextures;
 	static std::vector<MaterialPreviewerEntry> materialList;
