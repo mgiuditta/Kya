@@ -17176,47 +17176,37 @@ int CBehaviourHeroDefault::InterpretMessage(CActor* pSender, int msg, void* pMsg
 					}
 
 					if (msg == 0x5d) {
-						IMPLEMENTATION_GUARD(
 						pHeroRef = this->pHero;
 						pHeroRef->flags = pHeroRef->flags & 0xfffffffd;
 						pHeroRef->flags = pHeroRef->flags | 1;
-						pHeroRef = this->pHero;
 						pHeroRef->flags = pHeroRef->flags & 0xffffff7f;
 						pHeroRef->flags = pHeroRef->flags | 0x20;
-						CActor::EvaluateDisplayState((CActor*)pHeroRef);
-						(*((this->pHero->base).character.characterBase.base.base.pVTable)->SetState)
-							(this->pHero, STATE_HERO_SHOP, 0xffffffff);
-						pCollisionRef = (this->pHero->base).character.characterBase.base.base.pCollisionData;
+						pHeroRef->EvaluateDisplayState();
+						this->pHero->SetState(STATE_HERO_SHOP, 0xffffffff);
+						pCollisionRef = this->pHero->pCollisionData;
 						pCollisionRef->flags_0x0 = pCollisionRef->flags_0x0 & 0xfff7efff;
 						pHeroRef = this->pHero;
-						if (pHeroRef != (CActorHeroPrivate*)CActorHero::_gThis) {
-							pPlayerInput = (*(pHeroRef->pVTable)->GetInputManager)
-								((CActor*)pHeroRef, 0, 0);
-							pPlayerInput->playerId = 0;
+						if (pHeroRef != CActorHero::_gThis) {
+							pHeroRef->GetInputManager(0, 0)->bActive = 0;
 						}
-						return 1;)
+						return 1;
 					}
 
 					if (msg == 0x5c) {
-						IMPLEMENTATION_GUARD(
 						pHeroRef = this->pHero;
 						pHeroRef->flags = pHeroRef->flags | 2;
 						pHeroRef->flags = pHeroRef->flags & 0xfffffffe;
-						pHeroRef = this->pHero;
 						pHeroRef->flags = pHeroRef->flags | 0x80;
 						pHeroRef->flags = pHeroRef->flags & 0xffffffdf;
-						CActor::EvaluateDisplayState((CActor*)pHeroRef);
-						(*((this->pHero->base).character.characterBase.base.base.pVTable)->SetState)
-							(this->pHero, STATE_HERO_STAND, 0xffffffff);
-						pCollisionRef = (this->pHero->base).character.characterBase.base.base.pCollisionData;
+						pHeroRef->EvaluateDisplayState();
+						this->pHero->SetState(STATE_HERO_STAND, 0xffffffff);
+						pCollisionRef = this->pHero->pCollisionData;
 						pCollisionRef->flags_0x0 = pCollisionRef->flags_0x0 | 0x81000;
 						pHeroRef = this->pHero;
-						if (pHeroRef != (CActorHeroPrivate*)CActorHero::_gThis) {
-							pPlayerInput = (*(pHeroRef->pVTable)->GetInputManager)
-								((CActor*)pHeroRef, 0, 0);
-							pPlayerInput->playerId = 1;
+						if (pHeroRef != CActorHero::_gThis) {
+							pHeroRef->GetInputManager(0, 0)->bActive = 1;
 						}
-						return 1;)
+						return 1;
 					}
 
 					if (msg == MESSAGE_TRAP_RELEASE) {

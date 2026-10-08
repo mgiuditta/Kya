@@ -336,7 +336,6 @@ void CFrontendLifeGauge::Draw()
 			}
 
 			if (bLowHealth) {
-				IMPLEMENTATION_GUARD_LOG("Check");
 				fVar9 = cosf(Timer::GetTimer()->totalTime * 8.0f) * 64.0f + 64.0f;
 				if (2.147484e+09 <= fVar9) {
 		fVar9 = fVar9 - 2.147484e+09f;

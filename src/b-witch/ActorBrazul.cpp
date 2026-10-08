@@ -1187,28 +1187,27 @@ void astruct_19::Reset(float param_1)
 void astruct_19::Draw()
 {
 	int iVar1;
-	undefined* puVar2;
-	long lVar3;
+	uint uVar2;
+	bool bVar3;
 	float fVar4;
 	int iVar5;
 
-	IMPLEMENTATION_GUARD_FX(
 	iVar1 = this->field_0x4;
-	lVar3 = 0;
+	bVar3 = false;
 	iVar5 = 0x7f;
-	if (iVar1 != 0) {
-		if (iVar1 != 2) {
-			if (iVar1 != 3) goto LAB_003e53e8;
+	if ((iVar1 == 2) || (iVar1 == 3)) {
+		if (iVar1 == 3) {
 			fVar4 = (this->field_0x34 / this->field_0x38) * 127.0f;
-			iVar5 = static_cast<int>(float)(static_cast<int>(fVar4) * static_cast<uint>(0.0f < fVar4));
+			iVar5 = static_cast<int>(fVar4) * static_cast<int>(0.0f < fVar4);
 		}
-		puVar2 = static_cast<undefined*>(iVar5 << 0x18 | 0xa6a500);
-		lVar3 = 1;
-		(this->field_0x40).field_0x90 = puVar2;
-		(this->field_0x40).field_0x94 = puVar2;
+
+		uVar2 = iVar5 << 0x18 | 0xa6a500;
+		bVar3 = true;
+		(this->field_0x40).field_0x90 = uVar2;
+		(this->field_0x40).field_0x94 = uVar2;
 	}
-LAB_003e53e8:
-	this->field_0x40.Draw(lVar3);)
+
+	this->field_0x40.Draw(bVar3);
 
 	return;
 }
