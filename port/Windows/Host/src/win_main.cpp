@@ -12,13 +12,36 @@
 #include <csignal>
 #include "log.h"
 
+#ifdef __APPLE__
+#include <execinfo.h>
+#include <unistd.h>
+#endif
+
 void signal_handler(int signal)
 {
 	Log::GetInstance().ForceFlush();
 }
 
+#ifdef __APPLE__
+// Print a backtrace to stderr on a crash; the macOS app sends stderr to last_run.log.
+static void crash_handler(int signal)
+{
+	void* frames[64];
+	const int count = backtrace(frames, 64);
+	const char header[] = "\nFatal signal, backtrace:\n";
+	write(STDERR_FILENO, header, sizeof(header) - 1);
+	backtrace_symbols_fd(frames, count, STDERR_FILENO);
+	// Exit instead of re-raising so macOS does not pop a crash report dialog.
+	_exit(128 + signal);
+}
+#endif
+
 int main(int argc, char** argv) {
 	std::signal(SIGINT, signal_handler);
+#ifdef __APPLE__
+	std::signal(SIGSEGV, crash_handler);
+	std::signal(SIGBUS, crash_handler);
+#endif
 
 	DebugMenu::ApplyStartupSettings();
 	Renderer::Setup();
