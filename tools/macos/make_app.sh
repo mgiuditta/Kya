@@ -34,6 +34,8 @@ cat > "$APP/Contents/Resources/vulkan/icd.d/MoltenVK_icd.json" <<'JSON'
 JSON
 
 rsync -a --exclude 'MOVIES/' --exclude '*.lastWriteTime' "${DATA[@]/#/$BIN/}" "$APP/Contents/Resources/game/"
+# Optional asset packs (mods/textures from make_texture_pack.py).
+[ -d "$BIN/mods" ] && rsync -a "$BIN/mods" "$APP/Contents/Resources/game/"
 [ -f "$ROOT/assets/Kya.icns" ] && cp "$ROOT/assets/Kya.icns" "$APP/Contents/Resources/Kya.icns"
 
 # The game reads and writes relative to its working directory, so run it from a
