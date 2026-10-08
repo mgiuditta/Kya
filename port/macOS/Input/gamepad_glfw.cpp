@@ -20,6 +20,14 @@ namespace GamepadImpl
 
 	static Reading GetReading()
 	{
+		// Pads missing from GLFW's built-in database, in SDL format. Needs glfwInit, so loaded on the first read after it.
+		// SCUF Envision Pro: same layout as its SDL_GameControllerDB Linux entry, checked on a real pad.
+		static bool bMappingsLoaded = false;
+		if (!bMappingsLoaded) {
+			bMappingsLoaded = glfwUpdateGamepadMappings(
+				"03000000952e00004d43000000000000,SCUF Envision Pro Controller,a:b0,b:b1,back:b6,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b10,leftshoulder:b4,leftstick:b8,lefttrigger:a3,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b9,righttrigger:a4,rightx:a2,righty:a5,start:b7,x:b2,y:b3,platform:Mac OS X,\n") == GLFW_TRUE;
+		}
+
 		Reading reading;
 
 		for (int joystick = GLFW_JOYSTICK_1; joystick <= GLFW_JOYSTICK_LAST; joystick++) {
