@@ -1,5 +1,6 @@
 #include "edMusicData.h"
 #include "edSoundStreamService.h"
+#include "AudioPack.h"
 
 #include <algorithm>
 #include <stdexcept>
@@ -166,6 +167,19 @@ bool ParseMusicBank(std::span<const std::uint8_t> header, std::span<const std::u
 			if (waves.U8(entry + 6) == 1) {
 				sample.loopBegin = static_cast<std::uint32_t>((loop - start) / 16 * 28);
 				sample.loopEnd = static_cast<std::uint32_t>(sample.pcm.size());
+			}
+
+			const std::uint64_t packHash = AudioPack::Hash(sample.pcm, 1, sample.rate);
+			AudioPack::DumpIfEnabled("music", packHash, sample.pcm, 1, sample.rate);
+			std::vector<std::int16_t> packPcm;
+			std::uint32_t packChannels = 0, packRate = 0;
+			if (AudioPack::LoadReplacement("music", packHash, packPcm, packChannels, packRate) && packChannels == 1) {
+				if (sample.loopEnd) {
+					sample.loopBegin = std::min(AudioPack::ScaleFrame(sample.loopBegin, sample.rate, packRate), static_cast<std::uint32_t>(packPcm.size() - 1));
+					sample.loopEnd = static_cast<std::uint32_t>(packPcm.size());
+				}
+				sample.pcm = std::move(packPcm);
+				sample.rate = packRate;
 			}
 		}
 		for (std::size_t i = 0; i < programTable.size(); ++i) {

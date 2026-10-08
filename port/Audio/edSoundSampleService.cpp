@@ -1,6 +1,7 @@
 #include "edSoundSampleService.h"
 #include "edSoundStreamService.h"
 #include "edSoundDevice.h"
+#include "AudioPack.h"
 #include "edSysTransferService.h"
 #include "log.h"
 
@@ -160,6 +161,25 @@ bool DecodeSample(const std::uint8_t* data, std::size_t size, const SampleDescri
 		if (description.loopStartOffset % 16 || description.loopStartOffset >= playBytes) return false;
 		decoded.loopBegin = description.loopStartOffset / 16 * 28;
 		decoded.loopLength = static_cast<std::uint32_t>(decoded.pcm.size()) - decoded.loopBegin;
+	}
+
+	const std::uint64_t packHash = AudioPack::Hash(decoded.pcm, 1, decoded.sampleRate);
+	AudioPack::DumpIfEnabled("sample", packHash, decoded.pcm, 1, decoded.sampleRate);
+	std::vector<std::int16_t> packPcm;
+	std::uint32_t packChannels = 0, packRate = 0;
+	if (AudioPack::LoadReplacement("sample", packHash, packPcm, packChannels, packRate)) {
+		// Sample voices are mono.
+		if (packChannels == 2) {
+			for (std::size_t i = 0; i < packPcm.size() / 2; ++i)
+				packPcm[i] = static_cast<std::int16_t>((packPcm[2 * i] + packPcm[2 * i + 1]) / 2);
+			packPcm.resize(packPcm.size() / 2);
+		}
+		if (decoded.loopLength) {
+			decoded.loopBegin = std::min(AudioPack::ScaleFrame(decoded.loopBegin, decoded.sampleRate, packRate), static_cast<std::uint32_t>(packPcm.size() - 1));
+			decoded.loopLength = static_cast<std::uint32_t>(packPcm.size()) - decoded.loopBegin;
+		}
+		decoded.pcm = std::move(packPcm);
+		decoded.sampleRate = packRate;
 	}
 	out = std::move(decoded);
 	return true;

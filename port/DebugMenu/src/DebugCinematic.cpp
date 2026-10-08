@@ -3,6 +3,9 @@
 
 #include <imgui.h>
 #include <algorithm>
+#include <chrono>
+#include <cstdio>
+#include <cstdlib>
 #include <cctype>
 #include <numeric>
 #include <unordered_map>
@@ -556,7 +559,67 @@ namespace Debug::Cinematic
 	}
 }
 
+namespace Debug::Cinematic {
+	// KYA_CINEMATIC_SWEEP=<seconds>: after the level loads, load and start every cinematic in turn,
+	// let each play that long, then jump to its end and move on; exit after the last one.
+	// Used with KYA_AUDIO_DUMP to collect the cutscene voice streams.
+	static void UpdateCinematicSweep() {
+		static const char* pSeconds = getenv("KYA_CINEMATIC_SWEEP");
+		auto* pManager = g_CinematicManager_0048efc;
+		if (pSeconds == nullptr || pManager == nullptr || pManager->activeCinematicCount == 0) {
+			return;
+		}
+
+		using Clock = std::chrono::steady_clock;
+		static const auto kPlay = std::chrono::duration<double>(atof(pSeconds));
+		static Clock::time_point stepStart = Clock::now() + std::chrono::seconds(10);
+		static int index = -1;
+		static bool bStarted = false;
+
+		const auto now = Clock::now();
+		if (now < stepStart) {
+			return;
+		}
+
+		if (index >= 0) {
+			CCinematic* pCinematic = pManager->ppCinematicObjB_B[index];
+			if (!bStarted && pCinematic->cineBankLoadStage_0x2b4 == 4) {
+				pCinematic->Start();
+				bStarted = true;
+			}
+
+			const bool bPlaying = pCinematic->state == CS_Playing;
+			// Loading can stall on a cinematic gated by game state; give up after 20 s.
+			if (bPlaying && now - stepStart >= kPlay && HasInitializedCinData(pCinematic)) {
+				pCinematic->totalCutsceneDelta = pCinematic->cinFileData.pCinTag->totalPlayTime;
+			}
+			if ((bStarted && !bPlaying && now - stepStart >= kPlay) || now - stepStart >= std::chrono::seconds(20)) {
+				fprintf(stderr, "[cinsweep] %d/%d %s %s\n", index, pManager->activeCinematicCount, pCinematic->fileName, bStarted ? "played" : "never loaded");
+				fflush(stderr);
+			}
+			else {
+				return;
+			}
+		}
+
+		if (++index >= pManager->activeCinematicCount) {
+			fprintf(stderr, "[cinsweep] done, %d cinematics\n", pManager->activeCinematicCount);
+			fflush(stderr);
+			std::_Exit(0);
+		}
+
+		CCinematic* pNext = pManager->ppCinematicObjB_B[index];
+		pNext->flags_0x8 &= ~(CINEMATIC_RUNTIME_FLAG_ONE_SHOT_LOCKED | CINEMATIC_RUNTIME_FLAG_CONDITION_BLOCKED);
+		if (pNext->cineBankLoadStage_0x2b4 != 4) {
+			pNext->Load(1);
+		}
+		bStarted = false;
+		stepStart = now;
+	}
+}
+
 namespace Debug {
     MenuRegisterer sDebugCinematicMenuReg("Cutscene", Debug::Cinematic::ShowMenu, true);
+    UpdateRegisterer sCinematicSweepUpdateReg(Debug::Cinematic::UpdateCinematicSweep);
 }
 

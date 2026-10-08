@@ -1,5 +1,6 @@
 #include "edSoundStreamService.h"
 #include "edSoundDevice.h"
+#include "AudioPack.h"
 
 #include "log.h"
 #include "../include/mod_override.h"
@@ -492,7 +493,13 @@ bool LoadStream(std::uint32_t streamId, const char* path)
 		return false;
 	}
 
+	std::uint32_t channels = stream.info.channels;
+	const std::uint64_t packHash = AudioPack::Hash(samples, channels, sampleRate);
+	AudioPack::DumpIfEnabled("stream", packHash, samples, channels, sampleRate);
+	AudioPack::LoadReplacement("stream", packHash, samples, channels, sampleRate);
+
 	stream.voice.reset();
+	stream.info.channels = channels;
 	stream.samples = std::move(samples);
 	stream.sampleRate = sampleRate;
 	stream.info.sampleRate = sampleRate;
