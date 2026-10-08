@@ -96,7 +96,8 @@ public:
 	virtual void NotifySonIsDead(CNewFx* pSon, int);
 	virtual void SpatializeOnActor(uint flags, CActor* pActor, uint boneId);
 	virtual void UpdateSpatializeActor(uint newFlags, edF32VECTOR4 *pNewPosition);
-	virtual void SetTimeScaler(float) { IMPLEMENTATION_GUARD(); }
+	// Not checked against the PS2 base; FX types without their own scaler ignore it.
+	virtual void SetTimeScaler(float) {}
 
 	void Manage();
 

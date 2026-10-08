@@ -3347,55 +3347,58 @@ int CActorHeroPrivate::InterpretMessage(CActor* pSender, int msg, void* pMsgPara
 		}
 
 		if (msg == 0x50) {
-			IMPLEMENTATION_GUARD(
-				pCVar11 = (*(this->pVTable)->GetLifeInterface)(this);
-			fVar25 = (float)(*(code*)pCVar11->pVtable->GetValue)(pCVar11);
-			bVar9 = fVar25 - this->field_0x2e4 <= 0.0;
+			pCVar11 = GetLifeInterface();
+			fVar25 = pCVar11->GetValue();
+			bVar9 = fVar25 - this->field_0x2e4 <= 0.0f;
 			if (!bVar9) {
 				bVar9 = (GetStateFlags(this->actorState) & 1) != 0;
 			}
 
-			if ((!bVar9) && (this->field_0x1558 <= 0.0)) {
-				this->field_0x1554 = 0.0;
+			if ((!bVar9) && (this->field_0x1558 <= 0.0f)) {
+				this->field_0x1554 = 0.0f;
 				return 1;
-			})
-				return 0;
+			}
+
+			return 0;
 		}
+
 		if (msg == 0x4f) {
-			IMPLEMENTATION_GUARD(
-				pCVar11 = (*(this->pVTable)->GetLifeInterface)(this);
-			fVar25 = (float)(*(code*)pCVar11->pVtable->GetValue)(pCVar11);
-			bVar9 = fVar25 - this->field_0x2e4 <= 0.0;
+			pCVar11 = GetLifeInterface();
+			fVar25 = pCVar11->GetValue();
+			bVar9 = fVar25 - this->field_0x2e4 <= 0.0f;
 			if (!bVar9) {
 				bVar9 = (GetStateFlags(this->actorState) & 1) != 0;
 			}
 
 			if ((!bVar9) && (this->field_0x1558 <= 0.0f)) {
 				if (this->field_0x1554 == 0.0f) {
+					// The PS2 stores the integer 1 here; as a float it is the smallest denormal.
 					this->field_0x1554 = 1.401298e-45f;
-					*(undefined4*)&this->field_0x1550 = 0;
+					this->field_0x1550 = 0.0f;
 				}
 				return 1;
-			})
-				return 0;
+			}
+
+			return 0;
 		}
+
 		if (msg == 0x61) {
-			IMPLEMENTATION_GUARD(
-				pCVar11 = (*(this->pVTable)->GetLifeInterface)(this);
-			fVar25 = (float)(*(code*)pCVar11->pVtable->GetValue)(pCVar11);
-			bVar9 = fVar25 - this->field_0x2e4 <= 0.0;
+			pCVar11 = GetLifeInterface();
+			fVar25 = pCVar11->GetValue();
+			bVar9 = fVar25 - this->field_0x2e4 <= 0.0f;
 			if (!bVar9) {
 				bVar9 = (GetStateFlags(this->actorState) & 1) != 0;
 			}
 
-			if (((!bVar9) && (bVar9 = TestState_IsInCheatMode((CActorHero*)this), bVar9 == false)) &&
-				(this->field_0x1558 <= 0.0)) {
+			if (((!bVar9) && (bVar9 = TestState_IsInCheatMode(), bVar9 == false)) && (this->field_0x1558 <= 0.0f)) {
 				this->pTrappedByActor = pSender;
-				(*(this->pVTable)->SetBehaviour)(this, 7, 0x119, 0xffffffff);
+				SetBehaviour(7, 0x119, 0xffffffff);
 				return 1;
-			})
-				return 0;
+			}
+
+			return 0;
 		}
+
 		if (msg == 0x40) {
 			iVar13 = this->actorState;
 			if ((iVar13 == STATE_HERO_CAUGHT_TRAP_1) || (iVar13 == STATE_HERO_CAUGHT_TRAP_2)) {
