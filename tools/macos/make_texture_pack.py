@@ -29,7 +29,8 @@ def is_effect(path):
 def main():
     if len(sys.argv) < 4:
         sys.exit(__doc__)
-    dump, upscaler, out = sys.argv[1:4]
+    # The upscaler runs from its own folder to find models/, so every path is made absolute.
+    dump, upscaler, out = (os.path.abspath(a) for a in sys.argv[1:4])
     model = sys.argv[4] if len(sys.argv) > 4 else "realesrgan-x4plus-anime"
     scale = sys.argv[5] if len(sys.argv) > 5 else "4"
 
@@ -47,7 +48,7 @@ def main():
         if os.listdir(src):
             subprocess.run([upscaler, "-i", src, "-o", out, "-n", model, "-s", scale, "-f", "png"],
                            cwd=os.path.dirname(os.path.abspath(upscaler)), check=True,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                           stdout=subprocess.DEVNULL)
 
     # A pack built before an effect was reclassified keeps no stale copy of it.
     for f in pngs:

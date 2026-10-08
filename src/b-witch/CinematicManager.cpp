@@ -4239,7 +4239,12 @@ bool CBWCinCam::Initialize(bool param_2, uint* flags)
 bool CBWCinCam::SetFov(float fov)
 {
 	if (((g_CinematicManager_0048efc->pCurCinematic->flags_0x4 & CINEMATIC_FLAG_CUTSCENE_BANDS) != 0) &&
+#ifdef PLATFORM_WIN
+		// The PC view takes the window's aspect, so any widescreen shape counts, not just exactly 16:9.
+		(CCameraManager::_gThis->aspectRatio > 1.5f)) {
+#else
 		(CCameraManager::_gThis->aspectRatio == 1.777778f)) {
+#endif
 		fov = fov * 0.75f;
 	}
 	g_CinematicManager_0048efc->pCinematicCamera->fov = fov;
@@ -5735,7 +5740,12 @@ void CCinematicManager::DrawBandsAndSubtitle(int param_2)
 				edTextDraw(screenCoords.x, screenCoords.y, this->pSubtitleText);
 			}
 
+#ifdef PLATFORM_WIN
+			// Same widescreen test as CBWCinCam::SetFov.
+			if ((CCameraManager::_gThis->aspectRatio <= 1.5f) && ((param_2 != 0 || (this->field_0x34 != 0.0f)))) {
+#else
 			if ((CCameraManager::_gThis->aspectRatio != 1.777778f) && ((param_2 != 0 || (this->field_0x34 != 0.0f)))) {
+#endif
 				fVar13 = (float)gVideoConfig.screenHeight * 0.25f * 0.5f;
 				fVar12 = fVar13 * GetTimer()->cutsceneDeltaTime * 2.0f;
 				if (param_2 == 0) {
