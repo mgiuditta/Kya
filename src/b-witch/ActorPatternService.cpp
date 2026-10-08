@@ -898,6 +898,9 @@ bool CPatternPart::UpdatePatternPartLife()
 				if (iVar4 != 0) {
 					local_90.projectileType = 1;
 					local_90.damage = this->field_0x10;
+					// The PS2 code leaves these on the stack uninitialised; on PC the garbage makes the hero's knockback NaN.
+					local_90.flags = 0;
+					local_90.field_0x30 = 0.0f;
 					fVar14 = fmodf(static_cast<float>(iVar12 + this->field_0x50 + -1), (float)this->field_0x50);
 					if (2.147484e+09f <= fVar14) {
 						fVar14 = fVar14 - 2.147484e+09f;

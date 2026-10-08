@@ -74,6 +74,16 @@ public:
 
 	void ClearLocalData();
 
+	void BehaviourShootFire_Manage(CBehaviourShootFire* pBehaviour);
+	void StateShootComeBack(CBehaviourShoot* pBehaviour);
+	void StateShootFire(CBehaviourShootFire* pBehaviour);
+	void StateShootApproach(CBehaviourShoot* pBehaviour);
+
+	void UpdateVulnerability();
+	int GetTurnAnim(float rotSpeed, CActor* pTarget);
+	void UpdateFireTimers();
+	int CheckDetection();
+
 	CAddOnGenerator addOnGenerator;
 	ed_3D_Light_Config lightingConfig;
 	CBehaviourShootFire behaviourShootFire;
@@ -83,25 +93,38 @@ public:
 	uint field_0x350;
 	uint field_0x354;
 
+	float field_0x3c0;
+	float field_0x3c4;
+	float field_0x3c8;
 	float field_0x3cc;
+	uint field_0x3d0;
 	float field_0x3d4;
+	float field_0x3d8;
+	float field_0x3dc;
+	float field_0x3e0;
+	int field_0x3e4;
+	int field_0x3e8;
+	uint field_0x3ec;
 
 	uint field_0x3f0;
 	float field_0x3f4;
 	float field_0x3f8;
 	float field_0x3fc;
 
-	undefined4 field_0x400;
+	uint field_0x400;
 	undefined4 field_0x440;
 
 	CActorHero* field_0x438;
 	byte field_0x43c;
+	byte field_0x43d;
 
 	edF32MATRIX4 lightDirection;
 	edF32MATRIX4 lightColor;
 	edF32VECTOR4 lightAmbient;
 
 	ed_3d_hierarchy_setup altHierarchySetup;
+	edF32VECTOR4 altBoundingSphere;
+	float altClipping;
 
 	bool field_0x43e;
 	byte field_0x43f;
