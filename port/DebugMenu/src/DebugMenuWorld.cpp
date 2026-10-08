@@ -9,6 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "DebugMenu.h"
 #include "DebugWorldNames.h"
 #include "DebugCollision.h"
 #include "DebugCollisionDrawing.h"
@@ -1195,4 +1196,64 @@ namespace Debug {
 		DrawTiedActorChainWindow();
 	}
 
+} // namespace Debug
+
+namespace Debug {
+	// KYA_CHECKPOINT_SWEEP=<seconds>: after the level loads, respawn at every checkpoint in turn
+	// (same path as the Sectors tab "Go"), log each one to stderr and exit once the last has run.
+	// Used to find blockers past level load; a debug build aborts on the first asserting guard.
+	static void UpdateCheckpointSweep() {
+		static const char* pSeconds = getenv("KYA_CHECKPOINT_SWEEP");
+		if (pSeconds == nullptr) {
+			return;
+		}
+
+		using Clock = std::chrono::steady_clock;
+		static const auto kDwell = std::chrono::duration<double>(atof(pSeconds));
+		static Clock::time_point nextStep;
+		static int step = -2; // -2 waiting for the level, -1 warm-up Go (the first one after load does not take)
+
+		auto managers = GatherCheckpointManagers();
+		if (managers.empty() || CLevelScheduler::gThis == nullptr) {
+			return;
+		}
+
+		std::vector<std::pair<CActorCheckpointManager*, int>> checkpoints;
+		for (auto* pManager : managers) {
+			for (int i = 0; i < pManager->checkpointCount; ++i) {
+				checkpoints.push_back({ pManager, i });
+			}
+		}
+
+		const auto now = Clock::now();
+		if (step == -2) {
+			step = -1;
+			nextStep = now + std::chrono::seconds(10);
+			return;
+		}
+
+		if (now < nextStep) {
+			return;
+		}
+
+		if (step >= static_cast<int>(checkpoints.size())) {
+			fprintf(stderr, "[sweep] level 0x%x done, %d checkpoints\n", CLevelScheduler::gThis->currentLevelID, static_cast<int>(checkpoints.size()));
+			fflush(stderr);
+			std::_Exit(0);
+		}
+
+		const auto ref = checkpoints[step < 0 ? 0 : step];
+		fprintf(stderr, "[sweep] level 0x%x checkpoint %d/%d (%s #%d, sector %d)\n", CLevelScheduler::gThis->currentLevelID,
+			step, static_cast<int>(checkpoints.size()), ref.first->name, ref.second, ref.first->aCheckpoints[ref.second].sectorId);
+		fflush(stderr);
+		EnqueueLevelManageTask([ref]() {
+			ref.first->ActivateCheckpoint(ref.second);
+			CScene::_pinstance->Level_CheckpointReset();
+		});
+
+		step++;
+		nextStep = now + std::chrono::duration_cast<Clock::duration>(kDwell);
+	}
+
+	UpdateRegisterer sCheckpointSweepUpdateReg(UpdateCheckpointSweep);
 } // namespace Debug
