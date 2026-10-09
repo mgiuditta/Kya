@@ -341,6 +341,12 @@ void ed3DG3DHierarchyNodeSetAndClrStripFlag(ed_g3d_hierarchy* pHier, ushort flag
 	} while (true);
 }
 
+#ifdef PLATFORM_WIN
+// PC port: 2 marks strips as shadow casters (PS2 behaviour, 0x29f350). 4 is the old
+// port behaviour that never cast a character shadow; the "Character Shadows" setting picks it.
+int gShadowCastStripFlagMode = 2;
+#endif
+
 void ed3DG3DHierarchySetStripShadowCastFlag(ed_g3d_hierarchy* pHier, ushort flag)
 {
 	ed_g3d_hierarchy* peVar1;
@@ -363,7 +369,7 @@ void ed3DG3DHierarchySetStripShadowCastFlag(ed_g3d_hierarchy* pHier, ushort flag
 					ed_g3d_hierarchy* pNewHier = (ed_g3d_hierarchy*)(pHIER + 1);
 					while (pNewHier != (ed_g3d_hierarchy*)0x0) {
 						if (pNewHier == pHier) {
-							ed3DG3DHierarchyNodeSetAndClrStripFlag(pNewHier, flag, 1, 2);
+							ed3DG3DHierarchyNodeSetAndClrStripFlag(pNewHier, flag, 1, gShadowCastStripFlagMode);
 							break;
 						}
 
@@ -379,7 +385,7 @@ void ed3DG3DHierarchySetStripShadowCastFlag(ed_g3d_hierarchy* pHier, ushort flag
 				pChunck = edChunckGetNext(pChunck, (char*)0x0);
 			}
 
-			ed3DG3DHierarchyNodeSetAndClrStripFlag(pHier, flag, 1, 2);
+			ed3DG3DHierarchyNodeSetAndClrStripFlag(pHier, flag, 1, gShadowCastStripFlagMode);
 		}
 	}
 

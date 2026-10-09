@@ -24,6 +24,7 @@ extern int gNbDList_3D[2];
 extern int gCurRenderState;
 extern int gCurFlushState;
 extern float gLodDistanceScale;
+extern int gShadowCastStripFlagMode;
 
 namespace Debug {
 	namespace Rendering {
@@ -42,6 +43,8 @@ namespace Debug {
 		constexpr int kSmoothModelLevel = 3;
 		static Debug::Setting<int> gLodDistance = { "LOD Distance Multiplier", 4 };
 		static Debug::Setting<int> gShadowScale = { "Shadow Resolution Scale", 4 };
+		// Off restores the pre-remaster strip flags (no dynamic character shadows). Takes effect on the next level or checkpoint load.
+		static Debug::Setting<bool> gCharacterShadows = { "Character Shadows", true };
 
 		static void ApplyLodDistance()
 		{
@@ -225,6 +228,13 @@ void Debug::Rendering::DrawContents()
 		if (ImGui::IsItemHovered()) {
 			ImGui::SetTooltip("Keep detailed models this many times further away than the original (1 = original).");
 		}
+		if (gCharacterShadows.DrawImguiControl()) {
+			gCharacterShadows.UpdateValue();
+			gShadowCastStripFlagMode = gCharacterShadows ? 2 : 4;
+		}
+		ImGui::SameLine();
+		ImGui::TextDisabled("(reload level)");
+
 		if (gShadowScale.DrawImguiControl()) {
 			gShadowScale.UpdateValue();
 			Renderer::Native::SetShadowResolutionScale(static_cast<uint32_t>(std::max(gShadowScale.get(), 1)));
@@ -333,6 +343,7 @@ void Debug::Rendering::Init()
 	VU1Emu::GetEnableEmulatedRendering() = gEnableEmulatedRendering;
 	Renderer::Native::SetFullResolutionHeatCapture(gFullResolutionHeatCapture.get());
 	Renderer::Kya::SetMeshSmoothLevel(gSmoothModels ? kSmoothModelLevel : 0);
+	gShadowCastStripFlagMode = gCharacterShadows ? 2 : 4;
 	ApplyLodDistance();
 	Renderer::Native::SetShadowResolutionScale(static_cast<uint32_t>(std::max(gShadowScale.get(), 1)));
 
