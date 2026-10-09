@@ -1256,4 +1256,53 @@ namespace Debug {
 	}
 
 	UpdateRegisterer sCheckpointSweepUpdateReg(UpdateCheckpointSweep);
+
+	// "Auto Load Checkpoint" (sweep index, -1 off): with Auto Load Level ID, respawn there once the level is up.
+	static Debug::Setting<int> gAutoLoadCheckpoint = { "Auto Load Checkpoint", -1 };
+
+	static void UpdateAutoLoadCheckpoint() {
+		using Clock = std::chrono::steady_clock;
+		static Clock::time_point start;
+		static int presses = 0; // two Go presses: the first one after load does not take
+
+		if (gAutoLoadCheckpoint.get() < 0 || presses >= 2) {
+			return;
+		}
+
+		auto managers = GatherCheckpointManagers();
+		if (managers.empty() || CLevelScheduler::gThis == nullptr) {
+			return;
+		}
+
+		std::vector<std::pair<CActorCheckpointManager*, int>> checkpoints;
+		for (auto* pManager : managers) {
+			for (int i = 0; i < pManager->checkpointCount; ++i) {
+				checkpoints.push_back({ pManager, i });
+			}
+		}
+
+		const int index = gAutoLoadCheckpoint.get();
+		if (index >= static_cast<int>(checkpoints.size())) {
+			presses = 2;
+			return;
+		}
+
+		const auto now = Clock::now();
+		if (start == Clock::time_point{}) {
+			start = now;
+		}
+
+		if (now - start < std::chrono::seconds(5 + presses)) {
+			return;
+		}
+
+		const auto ref = checkpoints[index];
+		EnqueueLevelManageTask([ref]() {
+			ref.first->ActivateCheckpoint(ref.second);
+			CScene::_pinstance->Level_CheckpointReset();
+		});
+		presses++;
+	}
+
+	UpdateRegisterer sAutoLoadCheckpointUpdateReg(UpdateAutoLoadCheckpoint);
 } // namespace Debug
