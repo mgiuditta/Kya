@@ -651,7 +651,7 @@ void CActorTeleporter::UpdateCurTeleporterState(int levelId, int param_3)
 				iVar4 = this->pActorWaypointList->aEntries + iVar6;
 				pReceiver = iVar4->actorRef.Get();
 				CWayPoint* pWayPoint = iVar4->wayPointRef.Get();
-				if ((pReceiver != (CActor*)0x0) && (pfVar1 != (float*)0x0)) {
+				if ((pReceiver != (CActor*)0x0) && (pWayPoint != (CWayPoint*)0x0)) {
 					local_50.position.xyz = pWayPoint->location;
 					local_50.position.w = 1.0f;
 					SetVectorFromAngles(&local_50.rotation, &pWayPoint->rotation);
