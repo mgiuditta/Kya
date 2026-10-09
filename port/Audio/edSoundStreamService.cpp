@@ -294,6 +294,8 @@ std::string GetHostStreamPath(const std::string& path)
 		hostPath.erase(hostPath.begin());
 	if (hostPath.size() >= 2 && hostPath[hostPath.size() - 2] == ';' && hostPath.back() == '1')
 		hostPath.erase(hostPath.size() - 2);
+	// Disc paths use backslashes; only Windows accepts them, every host accepts '/'.
+	std::replace(hostPath.begin(), hostPath.end(), '\\', '/');
 	return hostPath;
 }
 
