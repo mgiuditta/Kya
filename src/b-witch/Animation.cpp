@@ -3098,6 +3098,14 @@ void CAnimation::RegisterBone(uint boneId)
 
 			pSkeleton = (this->anmSkeleton).pTag;
 
+#ifdef PLATFORM_WIN
+			// The active LOD can have no skeleton chunk (UpdateCurSkeleton clears pTag). The PS2
+			// read low RAM through the null pointer and carried on; keep the bone unit instead.
+			if (pSkeleton == (edANM_SKELETON*)0x0) {
+				pBoneData->matrix = gF32Matrix4Unit;
+			}
+			else
+#endif
 			if ((pSkeleton->flags & 2) == 0) {
 				boneCount = pSkeleton->boneCount;
 
