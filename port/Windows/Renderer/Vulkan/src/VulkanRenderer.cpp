@@ -1,4 +1,5 @@
 #include "VulkanRenderer.h"
+#include "Native/PostProcessing.h"
 
 #include <iostream>
 #include <fstream>
@@ -1375,6 +1376,7 @@ namespace Renderer
 			app.waitUntilReady();
 			Renderer::Native::ApplyPendingResizeIfNeeded();
 			Renderer::Native::DrainPendingTextureUpdates();
+			Renderer::Native::PostProcessing::DumpFrameIfRequested();
 		}
 	}
 

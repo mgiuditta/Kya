@@ -1,6 +1,10 @@
 #include "PostProcessing.h"
 
 #include <array>
+#include <chrono>
+#include <cstdio>
+#include <cstdlib>
+#include <vector>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -9,6 +13,11 @@
 #include "Objects/FrameBuffer.h"
 #include "NativeRenderer.h"
 #include "../../include/renderer.h"
+#include "Objects/VulkanBuffer.h"
+#include "Objects/VulkanCommands.h"
+#include "Objects/VulkanImage.h"
+
+#include <stb_image_write.h>
 
 namespace Renderer
 {
@@ -319,4 +328,49 @@ std::string Renderer::Native::PostProcessing::GetEffectName(Effect effect)
 	default:
 		return "Unknown";
 	}
+}
+
+void Renderer::Native::PostProcessing::DumpFrameIfRequested()
+{
+	static const char* pSeconds = getenv("KYA_FRAME_DUMP");
+	static const auto start = std::chrono::steady_clock::now();
+	static bool bDone = false;
+	if (pSeconds == nullptr || bDone || std::chrono::steady_clock::now() - start < std::chrono::duration<double>(atof(pSeconds))) {
+		return;
+	}
+	bDone = true;
+
+	// ponytail: stalls the GPU once; debug tool only.
+	vkDeviceWaitIdle(GetDevice());
+
+	const uint32_t width = static_cast<uint32_t>(gWidth);
+	const uint32_t height = static_cast<uint32_t>(gHeight);
+	const VkDeviceSize size = static_cast<VkDeviceSize>(width) * height * 4;
+	VulkanBuffer readback(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+	VkCommandBuffer cmd = BeginSingleTimeCommands();
+	VulkanImage::TransitionImageLayout(gFrameBuffer.colorImage, GetSwapchainImageFormat(), VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT, cmd);
+	VkBufferImageCopy region{};
+	region.imageSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 };
+	region.imageExtent = { width, height, 1 };
+	vkCmdCopyImageToBuffer(cmd, gFrameBuffer.colorImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, readback.Get(), 1, &region);
+	VulkanImage::TransitionImageLayout(gFrameBuffer.colorImage, GetSwapchainImageFormat(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT, cmd);
+	EndSingleTimeCommands(cmd);
+
+	void* pMapped = nullptr;
+	CheckVk(vkMapMemory(GetDevice(), readback.Memory(), 0, size, 0, &pMapped), "vkMapMemory");
+	std::vector<uint8_t> pixels(static_cast<const uint8_t*>(pMapped), static_cast<const uint8_t*>(pMapped) + size);
+	vkUnmapMemory(GetDevice(), readback.Memory());
+
+	const VkFormat format = GetSwapchainImageFormat();
+	const bool bBgra = format == VK_FORMAT_B8G8R8A8_UNORM || format == VK_FORMAT_B8G8R8A8_SRGB;
+	for (size_t i = 0; i < pixels.size(); i += 4) {
+		if (bBgra) {
+			std::swap(pixels[i], pixels[i + 2]);
+		}
+		pixels[i + 3] = 0xff;
+	}
+
+	stbi_write_png("frame-dump.png", static_cast<int>(width), static_cast<int>(height), 4, pixels.data(), static_cast<int>(width * 4));
+	fprintf(stderr, "KYA_FRAME_DUMP: wrote frame-dump.png (%ux%u)\n", width, height);
 }

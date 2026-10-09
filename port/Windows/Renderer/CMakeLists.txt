@@ -195,6 +195,8 @@ target_include_directories(Renderer PUBLIC "include")
 target_include_directories(Renderer PRIVATE "Shaders/config")
 # Texture packs: xxHash from TextureUpload, stb from tracy and glfw.
 set_source_files_properties("Vulkan/src/Texture/TexturePack.cpp" PROPERTIES INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/Vulkan/src/pcsx2/TextureUpload/ext/xxHash;${CMAKE_SOURCE_DIR}/port/ext/tracy/profiler/src;${CMAKE_CURRENT_LIST_DIR}/ext/glfw/deps")
+# KYA_FRAME_DUMP writes PNGs with the same stb copy (implementation compiled in TexturePack.cpp).
+set_source_files_properties("Vulkan/src/Native/PostProcessing.cpp" PROPERTIES INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/ext/glfw/deps")
 
 add_dependencies(Renderer Shaders)
 
