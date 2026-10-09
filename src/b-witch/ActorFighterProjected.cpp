@@ -907,6 +907,7 @@ void CBehaviourFighterProjected::InitState(int newState)
 		this->pOwner->dynamic.speed = 0.0f;
 		break;
 	case 0x5f:
+		pFighter = this->pOwner;
 		pFighter->_StateFighterHitStaggerFallInit(-1.0f);
 		break;
 	case 0x60:
