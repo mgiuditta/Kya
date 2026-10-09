@@ -16,6 +16,7 @@
 #include "Actor.h"
 #include "ActorManager.h"
 #include "ActorCheckpointManager.h"
+#include "WayPoint.h"
 #include "ActorWind.h"
 #include "ActorWolfen.h"
 #include "ActorJamGut.h"
@@ -1256,6 +1257,65 @@ namespace Debug {
 	}
 
 	UpdateRegisterer sCheckpointSweepUpdateReg(UpdateCheckpointSweep);
+
+	// KYA_WOLFEN_MAP=1: once the level is up, print for every checkpoint (sweep index) the nearest
+	// Wolfen in the same sector and its distance, then exit. Used to pick fight checkpoints.
+	static void UpdateWolfenMap() {
+		static const bool bEnabled = getenv("KYA_WOLFEN_MAP") != nullptr;
+		static int frames = 0;
+		if (!bEnabled) {
+			return;
+		}
+
+		auto managers = GatherCheckpointManagers();
+		CActorManager* pActorManager = CScene::ptable.g_ActorManager_004516a4;
+		if (managers.empty() || CLevelScheduler::gThis == nullptr || pActorManager == nullptr || ++frames < 120) {
+			return;
+		}
+
+		int index = 0;
+		for (auto* pManager : managers) {
+			for (int i = 0; i < pManager->checkpointCount; ++i, ++index) {
+				S_CHECKPOINT& checkpoint = pManager->aCheckpoints[i];
+				CWayPoint* pWayPoint = checkpoint.pWayPointA.Get();
+				if (pWayPoint == nullptr) {
+					continue;
+				}
+
+				const char* pNearest = nullptr;
+				float nearest = 1e9f;
+				int count = 0;
+				for (int a = 0; a < pActorManager->nbActors; ++a) {
+					CActor* pActor = pActorManager->aActors[a];
+					if (pActor == nullptr || pActor->typeID != WOLFEN) {
+						continue;
+					}
+					if (pActor->sectorId != -1 && pActor->sectorId != checkpoint.sectorId) {
+						continue;
+					}
+					const float dx = pActor->baseLocation.x - pWayPoint->location.x;
+					const float dy = pActor->baseLocation.y - pWayPoint->location.y;
+					const float dz = pActor->baseLocation.z - pWayPoint->location.z;
+					const float distance = sqrtf(dx * dx + dy * dy + dz * dz);
+					if (distance < 40.0f) {
+						count++;
+					}
+					if (distance < nearest) {
+						nearest = distance;
+						pNearest = pActor->name;
+					}
+				}
+
+				fprintf(stderr, "[wolfenmap] level 0x%x cp %d sector %d nearest %s %.1f within40 %d\n", CLevelScheduler::gThis->currentLevelID,
+					index, checkpoint.sectorId, pNearest ? pNearest : "-", pNearest ? nearest : -1.0f, count);
+			}
+		}
+
+		fflush(stderr);
+		std::_Exit(0);
+	}
+
+	UpdateRegisterer sWolfenMapUpdateReg(UpdateWolfenMap);
 
 	// "Auto Load Checkpoint" (sweep index, -1 off): with Auto Load Level ID, respawn there once the level is up.
 	static Debug::Setting<int> gAutoLoadCheckpoint = { "Auto Load Checkpoint", -1 };
