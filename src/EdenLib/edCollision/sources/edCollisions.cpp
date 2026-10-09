@@ -2468,7 +2468,7 @@ void edColComputeContactPrim(edColOBJECT* pColObjA, edColOBJECT* pColObjB, edCol
 				local_40.dd = (pColInfoOut->intersectionPoint).w;
 				pColInfo->field_0x44 = 0x0;
 
-				peVar2->field_0x0 = local_40;
+				pColInfo->field_0x0 = local_40;
 
 				pColInfo->field_0x48 = (byte)bType;
 				pColInfo->field_0x40 = STORE_POINTER(pPrimB);

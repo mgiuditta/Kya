@@ -9191,7 +9191,7 @@ int CInputAnalyser::Cumulate(CPlayerInput* pPlayerInput, edF32VECTOR4* param_3, 
 			this->patternB.field_0x2ushort = uVar2 & 0xf00f | (ushort)(((uint)(((ulong)uVar2 << 0x34) >> 0x38) | 8) << 4);
 		}
 
-		if ((this->patternB.field_0x2ushort << 0x34) >> 0x38 != 0) {
+		if ((((ulong)this->patternB.field_0x2ushort << 0x34) >> 0x38) != 0) {
 			this->patternA = this->patternB;
 			this->patternB.field_0x0uint = 0;
 			this->patternB.nbInputs = 0;

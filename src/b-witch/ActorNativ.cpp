@@ -593,7 +593,7 @@ int CActorNativ::InterpretMessage(CActor* pSender, int msg, void* pMsgParam)
 		else {
 			if (msg == 0x89) {	
 				CBehaviourNativTakeAndPut* pTakeAndPut = reinterpret_cast<CBehaviourNativTakeAndPut*>(GetBehaviour(NATIVE_BEHAVIOUR_TAKE_AND_PUT));
-				if (pCVar6 != (CBehaviour*)0x0) {
+				if (pTakeAndPut != (CBehaviourNativTakeAndPut*)0x0) {
 					bVar3 = false;
 					int newTrajectoryParamIndex = reinterpret_cast<int>(pMsgParam);
 
