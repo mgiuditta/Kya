@@ -562,7 +562,8 @@ namespace Debug::Cinematic
 namespace Debug::Cinematic {
 	// KYA_CINEMATIC_SWEEP=<seconds>: after the level loads, load and start every cinematic in turn,
 	// let each play that long, then jump to its end and move on; exit after the last one.
-	// Used with KYA_AUDIO_DUMP to collect the cutscene voice streams.
+	// Used with KYA_AUDIO_DUMP to collect the cutscene voice streams. KYA_CINEMATIC_SWEEP_START=<n>
+	// resumes at cinematic n, since forcing many cinematics in one run can exhaust memory.
 	static void UpdateCinematicSweep() {
 		static const char* pSeconds = getenv("KYA_CINEMATIC_SWEEP");
 		auto* pManager = g_CinematicManager_0048efc;
@@ -573,6 +574,7 @@ namespace Debug::Cinematic {
 		using Clock = std::chrono::steady_clock;
 		static const auto kPlay = std::chrono::duration<double>(atof(pSeconds));
 		static Clock::time_point stepStart = Clock::now() + std::chrono::seconds(10);
+		static const char* pStart = getenv("KYA_CINEMATIC_SWEEP_START");
 		static int index = -1;
 		static bool bStarted = false;
 
@@ -602,7 +604,8 @@ namespace Debug::Cinematic {
 			}
 		}
 
-		if (++index >= pManager->activeCinematicCount) {
+		index = std::max(index + 1, pStart ? atoi(pStart) : 0);
+		if (index >= pManager->activeCinematicCount) {
 			fprintf(stderr, "[cinsweep] done, %d cinematics\n", pManager->activeCinematicCount);
 			fflush(stderr);
 			std::_Exit(0);
