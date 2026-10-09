@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <mutex>
 #include <stdexcept>
 #include <unordered_map>
@@ -305,9 +306,18 @@ namespace Renderer::Native::Shadow
 			"Native Shadow Receiver Framebuffer");
 	}
 
+	static std::atomic<uint32_t> gResolutionScale = 1;
+
 	void BeginMask(const ShadowPassSettings& settings)
 	{
-		const ShadowPassSettings normalized = NormalizeSettings(settings);
+		// Scale the mask and the blur radius together: same softness, more detail.
+		ShadowPassSettings scaled = settings;
+		const uint32_t scale = gResolutionScale;
+		scaled.width *= scale;
+		scaled.height *= scale;
+		scaled.blurRadius *= scale;
+		scaled.blurSamples = settings.blurSamples * scale;
+		const ShadowPassSettings normalized = NormalizeSettings(scaled);
 		std::lock_guard lock(gDebugTargetMutex);
 		gpActiveTarget = &GetOrCreateTarget(normalized.width, normalized.height);
 		gSettings = normalized;
@@ -416,6 +426,11 @@ namespace Renderer::Native::Shadow
 		std::lock_guard lock(gDebugTargetMutex);
 		return gSettings;
 	}
+}
+
+void Renderer::Native::SetShadowResolutionScale(uint32_t scale)
+{
+	Shadow::gResolutionScale = std::clamp(scale, 1u, 8u);
 }
 
 Renderer::Native::ShadowPassSettings Renderer::Native::NormalizeShadowPassSettings(const ShadowPassSettings& settings)

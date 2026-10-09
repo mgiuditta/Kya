@@ -93,6 +93,8 @@ namespace Renderer
 		// Horizontal squeeze for 2D display lists so the 4:3 HUD keeps its shape on a wider screen.
 		void SetDisplayList2DScaleX(float scaleX);
 		void SetFullResolutionHeatCapture(bool enabled);
+		// Multiplies the game's shadow mask size (128x128 on PS2) and blur radius.
+		void SetShadowResolutionScale(uint32_t scale);
 		VkExtent2D GetHeatCaptureSize();
 		void Cleanup();
 		const glm::mat4& GetInitialViewMatrix();

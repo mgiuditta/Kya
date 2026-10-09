@@ -2019,6 +2019,9 @@ float gRenderInvFovCoef = 0.0f;
 float gRenderFovCoef = 0.0f;
 float gCurLOD_RenderFOVCoef = 0.0f;
 
+// PC port: scales the squared camera distance used to pick LODs. 1/(n*n) keeps the detailed LOD n times further away.
+float gLodDistanceScale = 1.0f;
+
 edSurface gRenderSurface = { 0 };
 
 SceneConfig* gRenderSceneConfig = NULL;
@@ -2278,7 +2281,7 @@ int ed3DInitRenderEnvironement(ed_3D_Scene* pScene, long mode)
 
 	projectionScaleFactorB = gRenderCamera->baseHorizontalHalfFOV / gRenderCamera->computedVerticalHalfFOV;
 	gRenderInvFovCoef = 1.0f / projectionScaleFactorB;
-	gRenderFovCoef = projectionScaleFactorB * projectionScaleFactorB;
+	gRenderFovCoef = projectionScaleFactorB * projectionScaleFactorB * gLodDistanceScale;
 	if (mode != 0) {
 		gCurLOD_RenderFOVCoef = gRenderFovCoef;
 	}

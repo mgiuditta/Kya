@@ -23,6 +23,7 @@ extern DisplayList** gDList_3D[2];
 extern int gNbDList_3D[2];
 extern int gCurRenderState;
 extern int gCurFlushState;
+extern float gLodDistanceScale;
 
 namespace Debug {
 	namespace Rendering {
@@ -39,6 +40,14 @@ namespace Debug {
 		static Debug::Setting<bool> gSupersampling = { "Supersampling 2x", true };
 		static Debug::Setting<bool> gSmoothModels = { "Smooth Models", true };
 		constexpr int kSmoothModelLevel = 3;
+		static Debug::Setting<int> gLodDistance = { "LOD Distance Multiplier", 4 };
+		static Debug::Setting<int> gShadowScale = { "Shadow Resolution Scale", 4 };
+
+		static void ApplyLodDistance()
+		{
+			const float multiplier = static_cast<float>(std::clamp(gLodDistance.get(), 1, 16));
+			gLodDistanceScale = 1.0f / (multiplier * multiplier);
+		}
 
 		// In DebugRendering.cpp, add this function:
 		void ShowDisplayListViewer(bool* bOpen)
@@ -178,6 +187,8 @@ void Debug::Rendering::DrawContents()
 			gFullResolutionHeatCapture.UpdateValue();
 			Renderer::Native::SetFullResolutionHeatCapture(gFullResolutionHeatCapture.get());
 	Renderer::Kya::SetMeshSmoothLevel(gSmoothModels ? kSmoothModelLevel : 0);
+	ApplyLodDistance();
+	Renderer::Native::SetShadowResolutionScale(static_cast<uint32_t>(std::max(gShadowScale.get(), 1)));
 		}
 		if (ImGui::IsItemHovered()) {
 			ImGui::SetTooltip("Capture heat distortion at the render-buffer resolution instead of 512 x 512. Applies next frame.");
@@ -209,6 +220,20 @@ void Debug::Rendering::DrawContents()
 		}
 		if (ImGui::IsItemHovered()) {
 			ImGui::SetTooltip("Round off animated characters by subdividing their triangles. Applies from the next level load.");
+		}
+		if (gLodDistance.DrawImguiControl()) {
+			gLodDistance.UpdateValue();
+			ApplyLodDistance();
+		}
+		if (ImGui::IsItemHovered()) {
+			ImGui::SetTooltip("Keep detailed models this many times further away than the original (1 = original).");
+		}
+		if (gShadowScale.DrawImguiControl()) {
+			gShadowScale.UpdateValue();
+			Renderer::Native::SetShadowResolutionScale(static_cast<uint32_t>(std::max(gShadowScale.get(), 1)));
+		}
+		if (ImGui::IsItemHovered()) {
+			ImGui::SetTooltip("Multiply the 128x128 shadow texture size, keeping the same blur (1 = original).");
 		}
 
 		ImGui::Spacing();
