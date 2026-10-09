@@ -43,6 +43,8 @@ namespace GamepadImpl
 				reading.leftY = -state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
 				reading.rightX = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X];
 				reading.rightY = -state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];
+				if (KyaGamepad::gInvertCameraX) reading.rightX = -reading.rightX;
+				if (KyaGamepad::gInvertCameraY) reading.rightY = -reading.rightY;
 
 				// GLFW triggers rest at -1.
 				reading.leftTrigger = (state.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] + 1.0f) * 0.5f;

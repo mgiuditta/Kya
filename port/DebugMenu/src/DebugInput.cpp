@@ -4,6 +4,19 @@
 #include <cstdint>
 #include "InputManager.h"
 #include "input_functions.h"
+#include "gamepad.h"
+#include "DebugSetting.h"
+
+namespace Debug::Input {
+	static Debug::Setting<bool> gInvertCameraX = { "Invert Camera X", false };
+	static Debug::Setting<bool> gInvertCameraY = { "Invert Camera Y", false };
+
+	static void ApplyCameraInversion()
+	{
+		KyaGamepad::gInvertCameraX = gInvertCameraX;
+		KyaGamepad::gInvertCameraY = gInvertCameraY;
+	}
+}
 
 void Debug::Input::ShowMenu(bool* bOpen)
 {
@@ -11,6 +24,15 @@ void Debug::Input::ShowMenu(bool* bOpen)
 	{
 		ImGui::End();
 		return;
+	}
+
+	if (gInvertCameraX.DrawImguiControl()) {
+		gInvertCameraX.UpdateValue();
+		ApplyCameraInversion();
+	}
+	if (gInvertCameraY.DrawImguiControl()) {
+		gInvertCameraY.UpdateValue();
+		ApplyCameraInversion();
 	}
 
 	// Check if we have a valid controller port
@@ -169,5 +191,6 @@ void Debug::Input::ShowMenu(bool* bOpen)
 
 namespace Debug {
     MenuRegisterer sDebugInputMenuReg("Input", Debug::Input::ShowMenu, true);
+    StartupRegisterer sDebugInputStartupReg(Debug::Input::ApplyCameraInversion);
 }
 
