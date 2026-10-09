@@ -8,6 +8,7 @@
 #include "DebugHelpers.h"
 #include "DebugSetting.h"
 #include "ActorHero.h"
+#include "LevelScheduler.h"
 
 namespace Debug
 {
@@ -16,6 +17,9 @@ namespace Debug
 		constexpr int gNumBraceletColors = 8;
 
 		Debug::Setting<bool> gAutoBuyBoomy("Auto Buy Boomy", false);
+		// Loading a level directly skips the story step that teaches exorcism and leaves the magic gauge empty.
+		Debug::Setting<bool> gUnlockExorcism("Unlock Exorcism", false);
+		Debug::Setting<bool> gFillMagic("Fill Magic", false);
 
 		struct BraceletInfo
 		{
@@ -50,6 +54,8 @@ void Debug::Shop::ShowMenu(bool* bOpen)
 		ImGui::SameLine(0.0f, 10.0f);
 
 		gAutoBuyBoomy.DrawImguiControl();
+		gUnlockExorcism.DrawImguiControl();
+		gFillMagic.DrawImguiControl();
 
 		for (int i = 0; i < gBracelets.size(); ++i) {
 			ImGui::PushStyleColor(ImGuiCol_Button, DebugHelpers::GetValidatedColor(CInventoryInfo::IsObjectPurchased(INVENTORY_ITEM_WHITE_BRACELET + i)));
@@ -70,6 +76,14 @@ void Debug::Shop::ShowMenu(bool* bOpen)
 void Debug::Shop::Update()
 {
 	if (CActorHero::_gThis != nullptr) {
+		if (gUnlockExorcism && CLevelScheduler::ScenVar_Get(SCN_ABILITY_MAGIC_EXORCISM) == 0) {
+			CLevelScheduler::ScenVar_Set(SCN_ABILITY_MAGIC_EXORCISM, 1);
+		}
+
+		if (gFillMagic) {
+			CActorHero::_gThis->magicInterface.SetValue(CActorHero::_gThis->magicInterface.GetValueMax());
+		}
+
 		if (gAutoBuyBoomy) {
 			if (!CInventoryInfo::IsObjectPurchased(INVENTORY_ITEM_BASE_BOOMY)) {
 				CInventoryInfo info;
