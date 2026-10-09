@@ -636,7 +636,7 @@ int CActorWind::InterpretMessage(CActor* pSender, int msg, void* pMsgParam)
 		if (0 < this->nbFxWind) {
 			do {
 				CFxWind* pFxWind = this->aFxWind + iVar4;
-				if (iVar1 == 0) {
+				if (uVar5 == 0) {
 					pFxWind->flags_0x54 = pFxWind->flags_0x54 & ~FXWIND_FLAG_ACTIVE;
 				}
 				else {
