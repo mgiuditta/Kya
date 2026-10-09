@@ -13273,7 +13273,6 @@ void CBehaviourWolfenFighterProjected::End(int newBehaviourId)
 
 	pWolfen = static_cast<CActorWolfen*>(this->pOwner);
 	if ((CActorHero::_gThis == pWolfen->pAdversary) && (pWolfen->FUN_00173de0(pWolfen->pAdversary) != 0)) {
-		CActorWolfen* pWolfen = static_cast<CActorWolfen*>(pWolfen);
 		pWolfen->pCommander->EndFightIntruder(pWolfen);
 		pWolfen->SetAdversary((CActorFighter*)0x0);
 	}
