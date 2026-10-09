@@ -15,6 +15,7 @@
 #include "VulkanRenderer.h"
 #include "CameraViewManager.h"
 #include "Settings.h"
+#include "Mesh.h"
 #include <algorithm>
 
 // Make sure these external variables are accessible
@@ -36,6 +37,8 @@ namespace Debug {
 		static Debug::Setting<bool> gWidescreen = { "Widescreen", true };
 		static Debug::Setting<bool> gMatchWindowResolution = { "Match Window Resolution", true };
 		static Debug::Setting<bool> gSupersampling = { "Supersampling 2x", true };
+		static Debug::Setting<bool> gSmoothModels = { "Smooth Models", true };
+		constexpr int kSmoothModelLevel = 3;
 
 		// In DebugRendering.cpp, add this function:
 		void ShowDisplayListViewer(bool* bOpen)
@@ -174,6 +177,7 @@ void Debug::Rendering::DrawContents()
 		if (gFullResolutionHeatCapture.DrawImguiControl()) {
 			gFullResolutionHeatCapture.UpdateValue();
 			Renderer::Native::SetFullResolutionHeatCapture(gFullResolutionHeatCapture.get());
+	Renderer::Kya::SetMeshSmoothLevel(gSmoothModels ? kSmoothModelLevel : 0);
 		}
 		if (ImGui::IsItemHovered()) {
 			ImGui::SetTooltip("Capture heat distortion at the render-buffer resolution instead of 512 x 512. Applies next frame.");
@@ -198,6 +202,13 @@ void Debug::Rendering::DrawContents()
 		}
 		if (ImGui::IsItemHovered()) {
 			ImGui::SetTooltip("Antialiasing: render at twice the window size per axis, then filter down. Needs Match Window Resolution.");
+		}
+		if (gSmoothModels.DrawImguiControl()) {
+			gSmoothModels.UpdateValue();
+			Renderer::Kya::SetMeshSmoothLevel(gSmoothModels ? kSmoothModelLevel : 0);
+		}
+		if (ImGui::IsItemHovered()) {
+			ImGui::SetTooltip("Round off animated characters by subdividing their triangles. Applies from the next level load.");
 		}
 
 		ImGui::Spacing();
@@ -299,6 +310,7 @@ void Debug::Rendering::Init()
 	Renderer::GetForceAnimMatrixIdentity() = gForceAnimMatrixIdentity;
 	VU1Emu::GetEnableEmulatedRendering() = gEnableEmulatedRendering;
 	Renderer::Native::SetFullResolutionHeatCapture(gFullResolutionHeatCapture.get());
+	Renderer::Kya::SetMeshSmoothLevel(gSmoothModels ? kSmoothModelLevel : 0);
 
 	if (gAutoApplyResolution) {
 		Renderer::Native::ResizeFrameBuffer(gRenderWidth.get(), gRenderHeight.get());
