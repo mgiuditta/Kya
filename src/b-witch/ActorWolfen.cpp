@@ -3568,7 +3568,8 @@ void CActorWolfen::BehaviourTrackWeaponSnipe_Manage(CBehaviourTrackWeaponSnipe* 
 						}
 						else {
 							if ((state == 0x92) || (state == WOLFEN_STATE_TRACK_DEFEND)) {
-								pBehaviour->NewFunc(this->pCommander);
+								state = -1;
+								bVar3 = pBehaviour->NewFunc(this->pCommander);
 
 								edF32Vector4SubHard(&eStack16, &pBehaviour->field_0x80, &this->pCommander->targetPosition);
 
@@ -3772,7 +3773,8 @@ void CActorWolfen::BehaviourFighterStd_Exit(CBehaviourFighterWolfen* pBehaviour)
 		SetCombatMode( ECM_InCombat);
 	}
 
-	uVar8 = GetStateFlags(this->actorState);
+	iVar1 = this->actorState;
+	uVar8 = GetStateFlags(iVar1);
 
 	bVar4 = (uVar8 & 0x100000) != 0;
 
