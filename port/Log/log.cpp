@@ -36,6 +36,7 @@ LogLevel Log::minLevel = LoadMinLevelFromEnv();
 static inline void InitLog(LogPtr pLog) {
 	pLog->set_pattern("%v");
 	pLog->set_level(gLogLevel);
+	pLog->flush_on(spdlog::level::warn);
 }
 
 void Log::ForceFlush()

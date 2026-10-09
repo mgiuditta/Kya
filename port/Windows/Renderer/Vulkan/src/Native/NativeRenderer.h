@@ -89,6 +89,8 @@ namespace Renderer
 
 		void ResizeFrameBuffer(int width, int height);
 		void ApplyPendingResizeIfNeeded();
+		// The frame's command buffers are safe to record into (fence waited, index advanced).
+		void OpenFrame();
 		VkExtent2D GetFrameBufferSize();
 		// Horizontal squeeze for 2D display lists so the 4:3 HUD keeps its shape on a wider screen.
 		void SetDisplayList2DScaleX(float scaleX);

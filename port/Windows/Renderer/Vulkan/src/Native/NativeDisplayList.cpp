@@ -114,7 +114,9 @@ namespace Renderer::Native::DisplayList
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-		vkBeginCommandBuffer(cmd, &beginInfo);
+		if (const VkResult result = vkBeginCommandBuffer(cmd, &beginInfo); result != VK_SUCCESS) {
+			fprintf(stderr, "[renderer] displaylist vkBeginCommandBuffer failed: %d (frame %u)\n", result, GetCurrentFrame());
+		}
 
 		Renderer::Debug::BeginLabel(GetCommandBuffer(), "Display List Render");
 

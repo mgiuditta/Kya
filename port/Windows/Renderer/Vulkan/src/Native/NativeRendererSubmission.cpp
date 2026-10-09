@@ -176,6 +176,11 @@ void Renderer::Native::OnVideoFlip()
 	SignalRenderThreadEndCommands(GetNativeRendererState().renderThread);
 }
 
+void Renderer::Native::OpenFrame()
+{
+	OpenRenderThreadFrame(GetNativeRendererState().renderThread);
+}
+
 void Renderer::Native::ApplyPendingResizeIfNeeded()
 {
 	ApplyPendingResizeInternal();

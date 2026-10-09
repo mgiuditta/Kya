@@ -971,13 +971,31 @@ public:
 	Multidelegate<> cleanupDelegate;
 	bool frameReady = false;
 
-	void waitUntilReady() {
-		frameReady = false;
-		currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+	// Set by present() once the frame's command buffers were submitted.
+	bool frameSubmitted = true;
 
-		// Wait for the GPU to finish work on this frame. Must happen before the close
-		// check too: the game keeps recording into this frame's command buffers.
-		CheckVk(vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX), "vkWaitForFences");
+	void waitUntilReady() {
+		if (frameReady) {
+			// Called twice without a present: the image is already acquired and the
+			// command buffers are still recording, so moving on would strand them.
+			fprintf(stderr, "[renderer] WaitUntilReady called again before Present, ignored\n");
+			return;
+		}
+
+		// Only move to the next frame once this one was submitted. A skipped frame
+		// (swap chain out of date, window closing) keeps recording into the same,
+		// already begun command buffers instead of switching to ones nobody began.
+		if (frameSubmitted) {
+			currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+
+			// Wait for the GPU to finish work on this frame. Must happen before the close
+			// check too: the game keeps recording into this frame's command buffers.
+			CheckVk(vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX), "vkWaitForFences");
+			frameSubmitted = false;
+		}
+		else {
+			fprintf(stderr, "[renderer] previous frame was not presented, reusing frame %u\n", currentFrame);
+		}
 
 		if (glfwWindowShouldClose(window)) {
 			return;
@@ -1064,6 +1082,7 @@ public:
 		}
 
 		frameReady = false;
+		frameSubmitted = true;
 	}
 
 	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
@@ -1377,6 +1396,7 @@ namespace Renderer
 			Renderer::Native::ApplyPendingResizeIfNeeded();
 			Renderer::Native::DrainPendingTextureUpdates();
 			Renderer::Native::PostProcessing::DumpFrameIfRequested();
+			Renderer::Native::OpenFrame();
 		}
 	}
 

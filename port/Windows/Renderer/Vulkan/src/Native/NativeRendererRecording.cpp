@@ -417,7 +417,9 @@ namespace Renderer
 			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 			beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-			vkBeginCommandBuffer(cmd, &beginInfo);
+			if (const VkResult result = vkBeginCommandBuffer(cmd, &beginInfo); result != VK_SUCCESS) {
+				fprintf(stderr, "[renderer] native vkBeginCommandBuffer failed: %d (frame %u)\n", result, GetCurrentFrame());
+			}
 
 			Renderer::Debug::BeginLabel(cmd, "Native Render");
 
@@ -589,7 +591,9 @@ namespace Renderer
 #endif
 				while (!bShouldStop) {
 					std::unique_lock<std::mutex> lock(mutex);
-					cv.wait(lock, [this] { return commands.peek() || bShouldStop; });
+					// Commands queued after a present wait for the next frame to open: until then the
+					// current frame's command buffer is still in flight and the frame index is about to move.
+					cv.wait(lock, [this] { return (bFrameOpen && commands.peek()) || bShouldStop; });
 
 					ZONE_SCOPED_NAME("RenderThread::Run");
 
@@ -684,6 +688,16 @@ namespace Renderer
 
 				bRecordedCommands = false;
 				bShouldRecordBegin = true;
+				bFrameOpen = false;
+			}
+
+			void OpenFrame()
+			{
+				{
+					std::unique_lock<std::mutex> lock(mutex);
+					bFrameOpen = true;
+				}
+				cv.notify_one();
 			}
 
 			double GetRenderThreadTime()
@@ -705,6 +719,7 @@ namespace Renderer
 			std::atomic<bool> bRecordedCommands = false;
 
 			std::atomic<bool> bShouldRecordBegin = true;
+			std::atomic<bool> bFrameOpen = false;
 
 			std::mutex mutex;
 			std::condition_variable cv;
@@ -781,6 +796,11 @@ namespace Renderer
 		void ResetRenderThread(RenderThread* renderThread)
 		{
 			renderThread->Reset();
+		}
+
+		void OpenRenderThreadFrame(RenderThread* renderThread)
+		{
+			renderThread->OpenFrame();
 		}
 
 		void MainThreadEndCommands(RenderThread* renderThread)

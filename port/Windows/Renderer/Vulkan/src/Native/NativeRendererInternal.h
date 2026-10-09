@@ -388,6 +388,7 @@ namespace Renderer
 		void AddRenderThreadDraw(RenderThread* renderThread, const Draw& draw);
 		bool GetRenderThreadHasRecordedCommands(RenderThread* renderThread);
 		void ResetRenderThread(RenderThread* renderThread);
+		void OpenRenderThreadFrame(RenderThread* renderThread);
 		void MainThreadEndCommands(RenderThread* renderThread);
 		void SignalRenderThreadEndCommands(RenderThread* renderThread);
 		double GetRenderThreadDuration(RenderThread* renderThread);
