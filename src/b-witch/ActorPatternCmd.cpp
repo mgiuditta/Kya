@@ -201,6 +201,7 @@ void CActorPatternCmd::StatePatternCmdStand()
 
 	if (iVar3 = CheckArea(), iVar3 == 1) {
 		if (this->nbStreamRefEntries == 2) {
+			pCVar2 = CScene::ptable.g_CameraManager_0045167c;
 			pCVar1 = pCVar2->pActiveCamera;
 			this->field_0x270 = pCVar1->transformationMatrix.rowZ;
 			this->field_0x270.y = 0.0f;
