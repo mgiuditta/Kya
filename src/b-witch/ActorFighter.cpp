@@ -1456,7 +1456,8 @@ void CActorFighter::_Std_GetPossibleHit(bool bPlayImpact)
 	s_fighter_action local_8;
 	uint local_4;
 
-	bVar8 = (GetStateFlags(this->actorState) & 0x2000000) != 0;
+	iVar4 = this->actorState;
+	bVar8 = (GetStateFlags(iVar4) & 0x2000000) != 0;
 	bVar2 = false;
 
 	if ((iVar4 - 0x3fU < 7) && ((1 << (iVar4 - 0x3fU & 0x1f) & 99U) != 0)) {
@@ -10737,8 +10738,9 @@ void CBehaviourFighterSlave::TermState(int oldState, int newState)
 	}
 
 	pFighter = this->pOwner;
+	uVar3 = this->pOwner->GetStateFlags(oldState);
 
-	if ((this->pOwner->GetStateFlags(oldState) & 0xff800) == 0x40000) {
+	if ((uVar3 & 0xff800) == 0x40000) {
 		pFighter = this->pOwner;
 
 		if ((this->pOwner->GetStateFlags(newState) & 0xff800) != 0x40000) {
