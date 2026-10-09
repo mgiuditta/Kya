@@ -1712,7 +1712,7 @@ bool CActorHero::FUN_0014cb60(edF32VECTOR4* v0)
 		while (true) {
 			S_ZONE_STREAM_REF* pZoneStreamRef = this->field_0xe48;
 			iVar4 = 0;
-			if (piVar1 != (int*)0x0) {
+			if (pZoneStreamRef != (S_ZONE_STREAM_REF*)0x0) {
 				iVar4 = pZoneStreamRef->entryCount;
 			}
 
