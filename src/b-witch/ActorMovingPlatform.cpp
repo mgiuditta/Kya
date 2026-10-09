@@ -1824,7 +1824,7 @@ int CActorMovingPlatform::InterpretMessage(CActor* pSender, int msg, void* pMsgP
 				pHitMessageParams->field_0x74 = uVar10;
 				break;
 			default:
-				pHitMessageParams->field_0x74 = uVar10;
+				pHitMessageParams->field_0x74 = 0;
 				break;
 			case 8:
 				uVar10 = 0;
