@@ -14,6 +14,9 @@
 
 #ifdef __APPLE__
 #include <execinfo.h>
+#include <dlfcn.h>
+#include <signal.h>
+#include <sys/ucontext.h>
 #include <unistd.h>
 #endif
 
@@ -24,12 +27,22 @@ void signal_handler(int signal)
 
 #ifdef __APPLE__
 // Print a backtrace to stderr on a crash; the macOS app sends stderr to last_run.log.
-static void crash_handler(int signal)
+static void crash_handler(int signal, siginfo_t* pInfo, void* pContext)
 {
 	void* frames[64];
 	const int count = backtrace(frames, 64);
-	const char header[] = "\nFatal signal, backtrace:\n";
-	write(STDERR_FILENO, header, sizeof(header) - 1);
+	char header[256];
+	const ucontext_t* pUc = static_cast<const ucontext_t*>(pContext);
+	// backtrace() walks frame pointers and loses the faulting function itself; print pc/lr too.
+	Dl_info pcInfo{};
+	const uintptr_t pc = pUc ? pUc->uc_mcontext->__ss.__pc : 0;
+	const uintptr_t lr = pUc ? pUc->uc_mcontext->__ss.__lr : 0;
+	dladdr(reinterpret_cast<void*>(pc), &pcInfo);
+	const int len = snprintf(header, sizeof(header), "\nFatal signal %d at %p (fault addr %p), pc %s+%lu, lr %p\nbacktrace:\n",
+		signal, reinterpret_cast<void*>(pc), pInfo ? pInfo->si_addr : nullptr,
+		pcInfo.dli_sname ? pcInfo.dli_sname : "?", pcInfo.dli_saddr ? (unsigned long)(pc - reinterpret_cast<uintptr_t>(pcInfo.dli_saddr)) : 0ul,
+		reinterpret_cast<void*>(lr));
+	write(STDERR_FILENO, header, len > 0 ? len : 0);
 	backtrace_symbols_fd(frames, count, STDERR_FILENO);
 	// Best effort: the game logs are buffered and _exit would drop them.
 	Log::GetInstance().ForceFlush();
@@ -41,13 +54,15 @@ static void crash_handler(int signal)
 int main(int argc, char** argv) {
 	std::signal(SIGINT, signal_handler);
 #ifdef __APPLE__
-	std::signal(SIGSEGV, crash_handler);
-	std::signal(SIGBUS, crash_handler);
-	// Release builds turn proven undefined behaviour into brk (SIGTRAP).
-	std::signal(SIGTRAP, crash_handler);
-	std::signal(SIGILL, crash_handler);
-	std::signal(SIGABRT, crash_handler);
-	std::signal(SIGFPE, crash_handler);
+	{
+		struct sigaction action {};
+		action.sa_sigaction = crash_handler;
+		action.sa_flags = SA_SIGINFO;
+		// Release builds turn proven undefined behaviour into brk (SIGTRAP).
+		for (const int signal : { SIGSEGV, SIGBUS, SIGTRAP, SIGILL, SIGABRT, SIGFPE }) {
+			sigaction(signal, &action, nullptr);
+		}
+	}
 #endif
 
 	DebugMenu::ApplyStartupSettings();
