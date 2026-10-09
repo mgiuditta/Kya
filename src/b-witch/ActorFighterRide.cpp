@@ -260,6 +260,7 @@ void CBehaviourFighterRidden::_ManageExit()
 	float fVar8;
 	CActorFighter* pFighter;
 
+	pCVar7 = this;
 	pFighter = this->pOwner;
 	iVar1 = pFighter->actorState;
 	if (iVar1 == -1) {
