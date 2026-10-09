@@ -19,8 +19,8 @@ import wave
 import numpy as np
 
 OUT_RATE = 48000
-CHUNK = 10.24  # seconds per AudioSR pass
-FADE = 0.25    # seconds of crossfade between chunks
+FADE = 0.25           # seconds of crossfade between chunks
+CHUNK = 10.24 - FADE  # seconds per AudioSR pass, overlap included
 MIN_SECONDS = 0.05
 
 
@@ -62,9 +62,13 @@ def upscale_channel(model, super_resolution, mono, rate, tmpdir):
         piece = mono[max(start - fade_in, 0):start + step]
         src = os.path.join(tmpdir, "chunk.wav")
         write_mono(src, piece, rate)
-        result = super_resolution(model, src, seed=42, guidance_scale=3.5, ddim_steps=50)
-        result = np.asarray(result, dtype=np.float32).reshape(-1)
         piece_len = round(len(piece) * OUT_RATE / rate)
+        try:
+            result = super_resolution(model, src, seed=42, guidance_scale=3.5, ddim_steps=50)
+            result = np.asarray(result, dtype=np.float32).reshape(-1)
+        except (ValueError, RuntimeError):
+            # AudioSR fails on some near-silent, full-band or very short chunks; keep those as they are.
+            result = resample(piece, rate, OUT_RATE, piece_len)
         result = result[:piece_len]
         if len(result) < piece_len:
             result = np.pad(result, (0, piece_len - len(result)))
