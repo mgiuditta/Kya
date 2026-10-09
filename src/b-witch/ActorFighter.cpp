@@ -900,7 +900,10 @@ void CActorFighter::TieToActor(CActor* pTieActor, int carryMethod, int param_4, 
 		else {
 			if (((stateFlags & 0xff800) == FIGHTER_EXECUTE_FLAGS_STD) &&
 				((iVar1 = this->actorState, iVar1 - 0x14U < 2 || (iVar1 == FIGHTER_FLIP_OFF_ME_B)))) {
-				pAdversary->TieToActor(pTieActor, carryMethod, param_4, pTieReferenceMatrix);
+				// PC: the adversary can already be cleared here (Kya.app crash at fortress 0xC).
+				if (pAdversary != (CActorFighter*)0x0) {
+					pAdversary->TieToActor(pTieActor, carryMethod, param_4, pTieReferenceMatrix);
+				}
 			}
 		}
 	}
