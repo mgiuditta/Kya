@@ -901,7 +901,8 @@ void CBehaviourCompanion::Create(ByteCode* pByteCode)
 				pCVar9->flags_0x2 = pCVar9->flags_0x2 | 0x10;
 			}
 
-			pCVar9->field_0x5c = pByteCode->GetF32();
+			fVar10 = pByteCode->GetF32();
+			pCVar9->field_0x5c = fVar10;
 			if (0.0f < fVar10) {
 				pCVar9->flags_0x2 = pCVar9->flags_0x2 | 0x100;
 			}
