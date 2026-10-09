@@ -13,6 +13,7 @@
 #include "TextureCacheRowOffset.h"
 #include "TextureUpload.h"
 #include "TexturePack.h"
+#include "Objects/VulkanCommands.h"
 
 static const int* rowOffset[8] = {
 	rowOffset32,
@@ -1036,18 +1037,16 @@ VkSampler& PS2::GetSampler(const PSSamplerSelector& selector, bool bPalette)
 		VkPhysicalDeviceProperties properties{};
 		vkGetPhysicalDeviceProperties(GetPhysicalDevice(), &properties);
 
-		//samplerInfo.anisotropyEnable = VK_TRUE;
-		//samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-
-		samplerInfo.anisotropyEnable = VK_FALSE;
-		samplerInfo.maxAnisotropy = 0.0f;
+		// Anisotropic filtering with the mip chain keeps oblique floors and walls sharp; nearest (ltf off) samplers stay unfiltered.
+		samplerInfo.anisotropyEnable = samplerInfo.minFilter == VK_FILTER_LINEAR ? VK_TRUE : VK_FALSE;
+		samplerInfo.maxAnisotropy = samplerInfo.anisotropyEnable ? std::min(16.0f, properties.limits.maxSamplerAnisotropy) : 1.0f;
 
 		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 		samplerInfo.unnormalizedCoordinates = VK_FALSE;
 		samplerInfo.compareEnable = VK_FALSE;
 		samplerInfo.compareOp = VK_COMPARE_OP_NEVER;
 
-		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+		samplerInfo.mipmapMode = samplerInfo.minFilter == VK_FILTER_LINEAR ? VK_SAMPLER_MIPMAP_MODE_LINEAR : VK_SAMPLER_MIPMAP_MODE_NEAREST;
 		samplerInfo.mipLodBias = 0.0f;
 		samplerInfo.minLod = -FLT_MAX;
 		samplerInfo.maxLod = FLT_MAX;
@@ -1130,16 +1129,24 @@ void PS2::GSSimpleTexture::CreateResources(const bool bPalette)
 {
 	const VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
 	const VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-	const VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-
 	if (bPalette) {
 		width = imageData.trxReg.RRW;
 		height = imageData.trxReg.RRH;
 	}
 	// else: width/height already set by the caller to the block-aligned upload dimensions
 
-	VulkanImage::CreateImage(width, height , format, tiling, usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image, imageMemory);
-	VulkanImage::CreateImageView(image, format, VK_IMAGE_ASPECT_COLOR_BIT, imageView);
+	// Full mip chain for images, so distant and oblique surfaces don't shimmer at high resolution. Palettes are lookup tables: one level.
+	mipLevels = 1;
+	if (!bPalette) {
+		for (uint32_t size = std::max(width, height); size > 1; size >>= 1) {
+			mipLevels++;
+		}
+	}
+
+	const VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | (mipLevels > 1 ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0);
+
+	VulkanImage::CreateImage(width, height , format, tiling, usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image, imageMemory, mipLevels);
+	VulkanImage::CreateImageView(image, format, VK_IMAGE_ASPECT_COLOR_BIT, imageView, mipLevels);
 	
 	SetObjectName(reinterpret_cast<uint64_t>(image), VK_OBJECT_TYPE_IMAGE, "GSTexImage Image (%d, %d) pallete: %d", width, height, bPalette);
 	SetObjectName(reinterpret_cast<uint64_t>(imageMemory), VK_OBJECT_TYPE_DEVICE_MEMORY, "GSTexImage Image Memory (%d, %d)  pallete: %d", width, height, bPalette);
@@ -1185,10 +1192,61 @@ void PS2::GSSimpleTexture::UploadData(int bufferSize, uint8_t* readBuffer)
 	memcpy(data, readBuffer, static_cast<size_t>(bufferSize));
 	vkUnmapMemory(GetDevice(), stagingBuffer.Memory());
 
-	VulkanImage::TransitionImageLayout(image, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
-	VulkanImage::CopyBufferToImage(stagingBuffer.Get(), image, width, height);
-	
-	VulkanImage::TransitionImageLayout(image, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_ASPECT_COLOR_BIT);
+	VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
+
+	VkImageMemoryBarrier barrier{};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.image = image;
+	barrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, mipLevels, 0, 1 };
+	barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	barrier.srcAccessMask = 0;
+	barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+	vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+	VulkanImage::CopyBufferToImage(stagingBuffer.Get(), image, width, height, commandBuffer);
+
+	// Each level is a linear blit of the one above; every level ends in shader-read layout.
+	barrier.subresourceRange.levelCount = 1;
+	int32_t mipWidth = static_cast<int32_t>(width);
+	int32_t mipHeight = static_cast<int32_t>(height);
+	for (uint32_t level = 1; level < mipLevels; level++) {
+		barrier.subresourceRange.baseMipLevel = level - 1;
+		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+		const int32_t nextWidth = std::max(mipWidth / 2, 1);
+		const int32_t nextHeight = std::max(mipHeight / 2, 1);
+		VkImageBlit blit{};
+		blit.srcSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, level - 1, 0, 1 };
+		blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
+		blit.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, level, 0, 1 };
+		blit.dstOffsets[1] = { nextWidth, nextHeight, 1 };
+		vkCmdBlitImage(commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
+
+		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+		mipWidth = nextWidth;
+		mipHeight = nextHeight;
+	}
+
+	barrier.subresourceRange.baseMipLevel = mipLevels - 1;
+	barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+	barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+	vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+	EndSingleTimeCommands(commandBuffer);
 }
 
 void PS2::GSSimpleTexture::DestroyImageResources()
