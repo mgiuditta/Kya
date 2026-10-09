@@ -35,6 +35,7 @@ namespace Debug {
 		static Debug::Setting<bool> gFullResolutionHeatCapture = { "Full Resolution Heat FX Capture", false };
 		static Debug::Setting<bool> gWidescreen = { "Widescreen", true };
 		static Debug::Setting<bool> gMatchWindowResolution = { "Match Window Resolution", true };
+		static Debug::Setting<bool> gSupersampling = { "Supersampling 2x", true };
 
 		// In DebugRendering.cpp, add this function:
 		void ShowDisplayListViewer(bool* bOpen)
@@ -192,6 +193,12 @@ void Debug::Rendering::DrawContents()
 		if (ImGui::IsItemHovered()) {
 			ImGui::SetTooltip("Render at the on-screen image size in pixels. Overrides the manual size below.");
 		}
+		if (gSupersampling.DrawImguiControl()) {
+			gSupersampling.UpdateValue();
+		}
+		if (ImGui::IsItemHovered()) {
+			ImGui::SetTooltip("Antialiasing: render at twice the window size per axis, then filter down. Needs Match Window Resolution.");
+		}
 
 		ImGui::Spacing();
 
@@ -321,7 +328,9 @@ void Debug::Rendering::UpdateGameResolution(float imageWidth, float imageHeight)
 	}
 
 	if (gMatchWindowResolution && imageWidth >= 1.0f && imageHeight >= 1.0f) {
-		Renderer::Native::ResizeFrameBuffer(static_cast<int>(imageWidth + 0.5f), static_cast<int>(imageHeight + 0.5f));
+		// Exact 2x per axis, so the linear display sampler averages each 2x2 block evenly.
+		const int scale = gSupersampling ? 2 : 1;
+		Renderer::Native::ResizeFrameBuffer(static_cast<int>(imageWidth + 0.5f) * scale, static_cast<int>(imageHeight + 0.5f) * scale);
 	}
 }
 

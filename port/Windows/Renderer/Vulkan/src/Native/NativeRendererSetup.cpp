@@ -28,8 +28,9 @@ namespace Renderer
 		{
 			VkSamplerCreateInfo samplerCreateInfo{};
 			samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-			samplerCreateInfo.magFilter = VK_FILTER_NEAREST;
-			samplerCreateInfo.minFilter = VK_FILTER_NEAREST;
+			// Linear: downsamples the supersampled framebuffer on display; identical to nearest at 1:1.
+			samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
+			samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
 			samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
 			samplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
 			samplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
