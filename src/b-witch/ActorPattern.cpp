@@ -531,7 +531,7 @@ void CActorPattern::BehaviourPatternAlone_Manage(CBehaviourPatternAlone* pBehavi
 			if (this->curBehaviourId == PATTERN_BEHAVIOUR_ALONE) {
 				CBehaviourPatternAlone* pAlone = (CBehaviourPatternAlone*)GetBehaviour(this->curBehaviourId);
 				CActor* pHero = this->field_0x37c->field_0x280;
-				if ((fVar1 != 0.0f) &&
+				if ((pHero != (CActor*)0x0) &&
 					(fVar3 = pHero->currentLocation.x - this->currentLocation.x,
 						fVar4 = pHero->currentLocation.y - this->currentLocation.y,
 						fVar1 = pHero->currentLocation.z - this->currentLocation.z,
