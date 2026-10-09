@@ -11212,7 +11212,7 @@ void ed3DRenderSonHierarchyForShadow(ed_3d_hierarchy* pHierarchy)
 					else {
 						cVar1 = pHierarchy->GlobalAlhaON;
 						pHierarchy->GlobalAlhaON = -1;
-						ed3DLod* peVar3 = ed3DHierarcGetLOD((ed_g3d_hierarchy*)pHierarchy, pHierarchy->lodCount - 1);
+						ed3DLod* peVar3 = ed3DHierarcGetLOD(pHierarchy, pHierarchy->lodCount - 1);
 						if (peVar3 != (ed3DLod*)0x0) {
 							ed3DRenderObject((ed_hash_code*)LOAD_POINTER(peVar3->pObj), (ed_hash_code*)(pHierarchy->pTextureInfo + 1));
 						}

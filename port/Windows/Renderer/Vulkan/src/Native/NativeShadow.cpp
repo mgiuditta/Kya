@@ -386,17 +386,6 @@ namespace Renderer::Native::Shadow
 		return { static_cast<uint32_t>(gWidth), static_cast<uint32_t>(gHeight) };
 	}
 
-	VkRect2D GetReceiverScissor()
-	{
-		const int32_t x = std::clamp(gReceiverViewport.x, 0, gWidth);
-		const int32_t y = std::clamp(gReceiverViewport.y, 0, gHeight);
-		const uint32_t availableWidth = static_cast<uint32_t>(gWidth - x);
-		const uint32_t availableHeight = static_cast<uint32_t>(gHeight - y);
-		const uint32_t width = gReceiverViewport.width ? std::min(gReceiverViewport.width, availableWidth) : availableWidth;
-		const uint32_t height = gReceiverViewport.height ? std::min(gReceiverViewport.height, availableHeight) : availableHeight;
-		return { { x, y }, { width, height } };
-	}
-
 	const VkDescriptorSet& GetReceiverDescriptorSet(uint32_t frameIndex)
 	{
 		if (!gpActiveTarget) throw std::runtime_error("shadow receiver pass has no active target");

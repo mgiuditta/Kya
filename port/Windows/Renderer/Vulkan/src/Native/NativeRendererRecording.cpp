@@ -149,7 +149,6 @@ namespace Renderer
 			viewport.maxDepth = 1.0f;
 			vkCmdSetViewport(cmd, 0, 1, &viewport);
 			VkRect2D scissor = { { 0, 0 }, renderPassInfo.renderArea.extent };
-			if (key.kind == ERenderPassKind::ShadowReceiver) scissor = Shadow::GetReceiverScissor();
 			vkCmdSetScissor(cmd, 0, 1, &scissor);
 
 			const auto& pipeline = stage.GetPipeline();
@@ -358,6 +357,8 @@ namespace Renderer
 
 						if (bShadowReceiver) {
 							vkCmdSetDepthWriteEnable(cmd, VK_FALSE);
+							// Receivers redraw geometry already in the depth buffer (GS ZTST GEQUAL).
+							vkCmdSetDepthCompareOp(cmd, VK_COMPARE_OP_GREATER_OR_EQUAL);
 							if (GetVulkanContext().bDynamicColorWrite) {
 								VkBool32 colorWriteEnable = VK_TRUE;
 								GetNativeRendererState().vkCmdSetColorWriteEnableEXT(cmd, 1, &colorWriteEnable);

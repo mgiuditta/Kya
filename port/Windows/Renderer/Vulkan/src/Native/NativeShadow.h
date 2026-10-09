@@ -18,7 +18,6 @@ namespace Renderer::Native::Shadow
 
 	VkFramebuffer GetFramebuffer(ERenderPassKind kind);
 	VkExtent2D GetExtent(ERenderPassKind kind);
-	VkRect2D GetReceiverScissor();
 	const VkDescriptorSet& GetReceiverDescriptorSet(uint32_t frameIndex);
 
 	VkSampler GetSampler();

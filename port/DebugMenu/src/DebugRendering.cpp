@@ -186,9 +186,6 @@ void Debug::Rendering::DrawContents()
 		if (gFullResolutionHeatCapture.DrawImguiControl()) {
 			gFullResolutionHeatCapture.UpdateValue();
 			Renderer::Native::SetFullResolutionHeatCapture(gFullResolutionHeatCapture.get());
-	Renderer::Kya::SetMeshSmoothLevel(gSmoothModels ? kSmoothModelLevel : 0);
-	ApplyLodDistance();
-	Renderer::Native::SetShadowResolutionScale(static_cast<uint32_t>(std::max(gShadowScale.get(), 1)));
 		}
 		if (ImGui::IsItemHovered()) {
 			ImGui::SetTooltip("Capture heat distortion at the render-buffer resolution instead of 512 x 512. Applies next frame.");
@@ -336,6 +333,8 @@ void Debug::Rendering::Init()
 	VU1Emu::GetEnableEmulatedRendering() = gEnableEmulatedRendering;
 	Renderer::Native::SetFullResolutionHeatCapture(gFullResolutionHeatCapture.get());
 	Renderer::Kya::SetMeshSmoothLevel(gSmoothModels ? kSmoothModelLevel : 0);
+	ApplyLodDistance();
+	Renderer::Native::SetShadowResolutionScale(static_cast<uint32_t>(std::max(gShadowScale.get(), 1)));
 
 	if (gAutoApplyResolution) {
 		Renderer::Native::ResizeFrameBuffer(gRenderWidth.get(), gRenderHeight.get());

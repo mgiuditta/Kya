@@ -23,8 +23,9 @@ layout(push_constant) uniform PerDrawData
 
 void main()
 {
-	if (shadowCoord.w <= 0.0) discard;
-	vec2 uv = shadowCoord.xy / shadowCoord.w;
+	// The projection is a PS2 STQ matrix: Q lands in z.
+	if (shadowCoord.z <= 0.0) discard;
+	vec2 uv = shadowCoord.xy / shadowCoord.z;
 	if (any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)))) discard;
 	float coverage = texture(shadowMask, uv).r;
 	float opacity = coverage * min(float(perDrawData.globalAlpha), 128.0) / 128.0;

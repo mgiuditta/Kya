@@ -1438,8 +1438,8 @@ float CLightConfig::ComputeShadow(ed_3D_Light_Config* pConfig, edF32VECTOR4* par
 
 			param_2->x = param_2->x + pDirection->x * fVar7;
 			param_2->y = param_2->y + absY * fVar7;
-			param_2->z = param_2->z + pDirection->y * fVar7;
-			param_2->w = param_2->w + pDirection->z * fVar7;
+			param_2->z = param_2->z + pDirection->z * fVar7;
+			param_2->w = param_2->w + pDirection->w * fVar7;
 
 			fVar8 = fVar8 + fVar7;
 			if (fVar7 <= fVar9) {
