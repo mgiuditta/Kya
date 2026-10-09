@@ -356,7 +356,8 @@ void CActorAraignos::BehaviourDefault_Manage()
 
 	iVar4 = this->actorState;
 	if (iVar4 == 6) {
-		if ((this->pAnimationController->IsCurrentLayerAnimEndReached(0)) && (bVar2 = pAnimation->FUN_0017f730(), bVar2 == false)) {
+		pAnimation = this->pAnimationController;
+		if ((pAnimation->IsCurrentLayerAnimEndReached(0)) && (bVar2 = pAnimation->FUN_0017f730(), bVar2 == false)) {
 			this->flags = this->flags & 0xffffff7f;
 			this->flags = this->flags | 0x20;
 
