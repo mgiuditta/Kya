@@ -28,6 +28,7 @@
 #include "edText.h"
 #include "ActorNativ.h"
 #include "ActorJamGut.h"
+#include "edStr.h"
 
 CActorHeroPrivate::CActorHeroPrivate()
 {
@@ -2663,6 +2664,7 @@ void CActorHeroPrivate::Draw()
 	char* pcVar2;
 	char* in_a3_lo;
 	edCTextStyle eStack192;
+	char acStack32[32];
 
 	CActorFighter::Draw();
 
@@ -2678,8 +2680,8 @@ void CActorHeroPrivate::Draw()
 			eStack192.rgbaColour = 0xffffffff;
 			eStack192.SetShadow(0x100);
 			eStack192.SetShadowShift(2.0f, 2.0f);
-			IMPLEMENTATION_GUARD(
-			pcVar2 = edFloat2String(this->field_0x1550, 2, (char*)&edDebugMenu, 0, in_a3_lo);)
+			// Original writes into a global scratch buffer (Ghidra: &edDebugMenu).
+			pcVar2 = edFloat2String(this->field_0x1550, 2, acStack32, 0);
 			edTextDraw(200.0f, 20.0f, "CHRONO : %s", pcVar2);
 			edTextStyleSetCurrent(pNewFont);
 			GuiDList_EndCurrent();
