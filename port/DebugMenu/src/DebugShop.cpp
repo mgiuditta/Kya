@@ -20,6 +20,10 @@ namespace Debug
 		// Loading a level directly skips the story step that teaches exorcism and leaves the magic gauge empty.
 		Debug::Setting<bool> gUnlockExorcism("Unlock Exorcism", false);
 		Debug::Setting<bool> gFillMagic("Fill Magic", false);
+		// Every non-bracelet shop item and ability, bought in order (Boomy base -> silver -> gold).
+		Debug::Setting<bool> gAutoBuyAllGadgets("Auto Buy All Gadgets", false);
+		constexpr int gAllGadgets[] = { INVENTORY_ITEM_BOUNCE, INVENTORY_ITEM_CLIMBING_GLOVES, INVENTORY_ITEM_BASE_BOOMY, INVENTORY_ITEM_SILVER_BOOMY,
+			INVENTORY_ITEM_GOLD_BOOMY, INVENTORY_ITEM_UNUSED_REGENERATE, INVENTORY_ITEM_JAMGUT_WHISTLE, INVENTORY_ITEM_MAGIC_BOARD, INVENTORY_ITEM_TELESCOPE };
 
 		struct BraceletInfo
 		{
@@ -56,6 +60,7 @@ void Debug::Shop::ShowMenu(bool* bOpen)
 		gAutoBuyBoomy.DrawImguiControl();
 		gUnlockExorcism.DrawImguiControl();
 		gFillMagic.DrawImguiControl();
+		gAutoBuyAllGadgets.DrawImguiControl();
 
 		for (int i = 0; i < gBracelets.size(); ++i) {
 			ImGui::PushStyleColor(ImGuiCol_Button, DebugHelpers::GetValidatedColor(CInventoryInfo::IsObjectPurchased(INVENTORY_ITEM_WHITE_BRACELET + i)));
@@ -89,6 +94,17 @@ void Debug::Shop::Update()
 				CInventoryInfo info;
 				info.purchaseId = INVENTORY_ITEM_BASE_BOOMY;
 				info.ObjectPurchased();
+			}
+		}
+
+		if (gAutoBuyAllGadgets) {
+			for (int item : gAllGadgets) {
+				const bool bOwned = (item == INVENTORY_ITEM_UNUSED_REGENERATE) ? CLevelScheduler::ScenVar_Get(SCN_ABILITY_MAGIC_REGENERATE) != 0 : CInventoryInfo::IsObjectPurchased(item) != 0;
+				if (!bOwned) {
+					CInventoryInfo info;
+					info.purchaseId = item;
+					info.ObjectPurchased();
+				}
 			}
 		}
 

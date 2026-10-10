@@ -809,8 +809,17 @@ void Debug::SaveLoad::Update()
 		return;
 	}
 
+	// KYA_SAVE_AT=<sec>: once, after that many seconds, save like F5 then exit (scripted save creation).
+	static const char* pSaveAt = getenv("KYA_SAVE_AT");
+	static const auto saveAtStart = std::chrono::steady_clock::now();
+	static bool bSaveAtDone = false;
+	const bool bScriptedSave = pSaveAt != nullptr && !bSaveAtDone && std::chrono::steady_clock::now() - saveAtStart > std::chrono::duration<double>(atof(pSaveAt));
+	if (bScriptedSave) {
+		bSaveAtDone = true;
+	}
+
 	// Listen for F5 and F7 key presses
-	if (ImGui::IsKeyPressed(ImGuiKey_F5)) {
+	if (bScriptedSave || ImGui::IsKeyPressed(ImGuiKey_F5)) {
 		const int slotId = gSaveManagement.slotID_0x28 >= 0 ? gSaveManagement.slotID_0x28 : gDefaultSaveSlot;
 		hotkeyTaskPending = true;
 		EnqueueLevelManageTask([slotId]() {
@@ -834,10 +843,15 @@ void Debug::SaveLoad::Update()
 				CScene::_pinstance->Level_PauseChange(1);
 				CScene::_pinstance->SetGlobalPaused_001b8c30(1);
 			}
-			SaveManagement_MemCardSave(slotId);
+			const bool bSaved = SaveManagement_MemCardSave(slotId);
 			CScene::_pinstance->Level_PauseChange(0);
 			CScene::_pinstance->SetGlobalPaused_001b8c30(0);
 			hotkeyTaskPending = false;
+			if (getenv("KYA_SAVE_AT") != nullptr) {
+				fprintf(stderr, "KYA_SAVE_AT: slot %d saved %d\n", slotId, bSaved ? 1 : 0);
+				fflush(stderr);
+				std::_Exit(bSaved ? 0 : 1);
+			}
 			});
 	}
 
