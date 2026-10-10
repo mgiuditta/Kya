@@ -200,7 +200,7 @@ int CActorHeroPrivate::ChooseStateLanding(float speed)
 
 			edF32Vector4NormalizeHard(&local_20, &local_20);
 
-			_StateFighterHitFall(speed, &local_10, &local_20, 0);
+			_StateFighterHitFall(speed, &local_10, &local_20, (CActorsTable*)0x0);
 
 			landingState = -1;
 			this->field_0x1558 = GetTimer()->scaledTotalTime + 1.5f;

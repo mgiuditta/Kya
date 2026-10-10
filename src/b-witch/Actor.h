@@ -430,10 +430,7 @@ struct _msg_hit_param
 	undefined field_0x5e;
 	undefined field_0x5f;
 	edF32VECTOR4 field_0x60;
-	undefined field_0x70;
-	undefined field_0x71;
-	undefined field_0x72;
-	undefined field_0x73;
+	float field_0x70;
 	int field_0x74;
 	undefined field_0x78;
 	undefined field_0x79;

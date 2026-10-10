@@ -141,6 +141,7 @@ struct CInputAnalyser
 	CInputAnalyser();
 	void _CumulateDirections(CPlayerInput* pInput, edF32VECTOR4* pDir);
 	int Cumulate(CPlayerInput* pPalyerInput, edF32VECTOR4* param_3, edF32VECTOR4* param_4);
+	bool FUN_003381b0(CPlayerInput* pPlayerInput, edF32VECTOR4* param_3, edF32VECTOR4* pDir);
 	void Reset();
 	static bool Compare(s_input_pattern* pPatternA, s_input_pattern* pPatternB, s_input_pattern_cmp* pPatternCmp);
 	void _SV_RotatePattern(int index);
@@ -177,6 +178,9 @@ public:
 	void ResetInternal(int textureIndex, int meshIndex);
 
 	edF32VECTOR4* GetTextureAnimSpeedNormalExtruder();
+
+	void Init(ed_3D_Scene* pScene, ed_g3d_manager* pMeshManager, ed_3d_hierarchy_setup* pHierarchySetup, char* szString);
+	void Release();
 
 	byte instanceIndex;
 	byte field_0x61;
@@ -513,6 +517,15 @@ public:
 #define NEXT_ACTION_TYPE_BLOW 1
 #define NEXT_ACTION_TYPE_GRAB 2
 
+// Block a held slave sends its master with message 1 (PS2 stack layout: sender +0, anim id +0x30).
+struct s_fighter_slave_hit_notify
+{
+	CActor* pSender;
+	edF32VECTOR4 direction;
+	edF32VECTOR4 impact;
+	int animId;
+};
+
 class CActorFighter : public CActorAutonomous
 {
 public:
@@ -563,7 +576,7 @@ public:
 	virtual bool IsInHitState();
 	virtual void Func_0x170();
 	virtual bool IsAlive();
-	virtual void EnableFightCamera() {}
+	virtual void EnableFightCamera(int bEnable) {}
 	virtual void AcquireAdversary();
 	virtual edF32VECTOR4* GetAdversaryPos();
 	virtual int Func_0x18c();
@@ -630,7 +643,7 @@ public:
 	void BehaviourFighterRidden_TermState(int oldState);
 
 	void _StateFighterHitWakingUpInit();
-	void _StateFighterHitFall(float param_1, edF32VECTOR4* param_3, edF32VECTOR4* param_4, int bProcessCollisions);
+	void _StateFighterHitFall(float param_1, edF32VECTOR4* param_3, edF32VECTOR4* param_4, CActorsTable* pTable);
 	void _StateFighterHitFly();
 	void _StateFighterHitFlyToSlide();
 	void _StateFighterHitSlide();
@@ -686,6 +699,15 @@ public:
 	void _StateFighterHoldThrowTerm();
 
 	void _StateFighterHoldFollowStd(int nextState);
+	void FUN_00309300();
+	void _StateFighterRideExitInit();
+	void _StateFighterRideExit();
+	void _StateFighterRideExitTerm();
+	void _StateFighterHoldFollow();
+	void _StateFighterHoldEscapeInit();
+	void _StateFighterHoldHitInit();
+	void _StateFighterHoldHit();
+	void _StateFighterHoldHitTerm(int newState);
 	void StateFighterHoldStd(int nextState, int nextAnim);
 
 	void _StateFighterRide();
@@ -710,6 +732,16 @@ public:
 	void FUN_00312370();
 
 	void FUN_00318db0();
+	void FUN_00319460();
+	void FUN_00318400();
+	void _StateFighterPrepareFightActionInit();
+	void _StateFighterPrepareFightActionTerm(int newState);
+	void _StateFighterExecuteFightActionInit();
+	void _StateFighterExecuteFightActionTerm(int newState);
+	void _StateFighterReturnFromFightActionInit();
+	void _StateFighterReturnFromFightActionTerm(int newState);
+	void FUN_003178a0(float param_1);
+	void PlayOrientedFxOnActor(CActor* pActor, edF32VECTOR4* pDirection, uint fxId, CFxHandle* pOutHandle, uint boneId);
 
 	void _LoadBlow(s_fighter_blow* pBlow, ByteCode* pByteCode);
 	void _CreateBlowsDB(ByteCode* pByteCode);
@@ -735,6 +767,7 @@ public:
 	void _SV_VOLDYN_PointSpeedFromVolumeSpeed(float param_1, edF32VECTOR4* param_3, edF32VECTOR4* param_4, edF32VECTOR4* param_5, edF32VECTOR4* param_6, edF32VECTOR4* param_7);
 	void _SV_VOLDYN_GetCollisionPosFromVector(edF32VECTOR4* v0, edF32VECTOR4* v1);
 
+	int _SV_ANM_GetMultiWaysAnim2D(s_fighter_multiways_anim* pAnimation, int direction);
 	int _SV_ANM_GetMultiWaysAnim3D(s_fighter_multiways_anim* pAnimation, edF32VECTOR4* param_3, edF32VECTOR4* param_4);
 	int _SV_ANM_GetTwoSidedAnim(int param_2, int param_3);
 
@@ -797,7 +830,9 @@ public:
 	edF32VECTOR4 logicalPosition;
 
 	float field_0x358;
+	float field_0x35c;
 	float field_0x360;
+	float field_0x364;
 	int field_0x36c;
 	float adversaryDistance;
 	undefined4 field_0x374;
@@ -916,6 +951,8 @@ public:
 	float field_0x6c8;
 	float field_0x6cc;
 
+	s_fighter_multiways_anim field_0x484;
+	s_fighter_multiways_anim field_0x48c;
 	s_fighter_multiways_anim field_0x6d0[12];
 	s_fighter_multiways_anim field_0x730;
 
