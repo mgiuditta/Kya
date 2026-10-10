@@ -11673,8 +11673,7 @@ bool CBehaviourFighterWolfen::TreatContext(CFightContext* pFightContext)
 	local_4 = 0;
 	if ((pFightContext->field_0x0 & 1) == 0) {
 		if ((long)((ulong)pFightContext->field_0x0 << 0x3e) < 0) {
-			IMPLEMENTATION_GUARD(
-			uVar4 = TreatContext_Attacked(pFightContext, &local_4);)
+			uVar4 = TreatContext_Attacked(pFightContext, &local_4);
 		}
 
 		if ((long)((ulong)pFightContext->field_0x0 << 0x3d) < 0) {
@@ -11708,18 +11707,16 @@ bool CBehaviourFighterWolfen::TreatContext(CFightContext* pFightContext)
 			if (pCVar1->pAdversary != (CActorFighter*)0x0) {
 				bVar4 = pCVar1->aCapabilities[2].Get();
 
-				IMPLEMENTATION_GUARD(
-				if ((bVar4) && (iVar5 = pCVar1->FUN_001fc300(2), iVar5 != 0)) {
+				if ((bVar4) && (pCVar1->ForceFightAction(2, true) != false)) {
 					ValidateCommand();
 					this->currentCommandId = -1;
 					uVar4 = true;
-				})
+				}
 			}
 		}
 
 		if ((uVar4 == false) && ((long)((ulong)pFightContext->field_0x0 << 0x3b) < 0)) {
-			IMPLEMENTATION_GUARD(
-			uVar4 = FUN_001f6110(this, pFightContext, &local_4);)
+			uVar4 = FUN_001f6110(pFightContext, &local_4);
 		}
 
 		if (local_4 == 0) {
@@ -12304,6 +12301,183 @@ void CBehaviourFighterWolfen::ValidateCommand()
 	}
 
 	return;
+}
+
+bool CBehaviourFighterWolfen::FUN_001f6110(CFightContext* pFightContext, int* pbNoCommand)
+{
+	CActorWolfen* pWolfen;
+	float fVar6;
+	float fVar7;
+	int iVar3;
+
+	pWolfen = static_cast<CActorWolfen*>(this->pOwner);
+	fVar6 = pWolfen->field_0xb48;
+	fVar7 = pWolfen->field_0xb4c;
+
+	if ((pWolfen->FUN_0031b790(pWolfen->actorState) == false) &&
+		((pWolfen->GetStateFlags(pWolfen->actorState) & 0x800000) != 0) && ((pWolfen->fightFlags & 1) == 0)) {
+		if ((pWolfen->pAdversary == (CActorFighter*)0x0) || (pWolfen->activeCapabilityIndex != 0)) {
+			return false;
+		}
+
+		if (pWolfen->field_0xb44 == 1) {
+			this->field_0x38 = GetTimer()->scaledTotalTime;
+			this->field_0x34 = fVar6 + ((fVar7 - fVar6) * (float)CScene::Rand()) / 32767.0f;
+		}
+		else {
+			if (pWolfen->field_0xb44 == 0) {
+				this->field_0x38 = 0.0f;
+				iVar3 = (((int)fVar7 - (int)fVar6) + 1) * CScene::Rand();
+				if (iVar3 < 0) {
+					iVar3 = iVar3 + 0x7fff;
+				}
+				this->field_0x34 = (float)((int)fVar6 + (iVar3 >> 0xf));
+			}
+		}
+
+		ValidateCommand();
+		InitCommand(pWolfen->field_0xb64[7].field_0x0);
+		this->field_0x68 = 1;
+		this->currentCommandId = 7;
+		return true;
+	}
+
+	*pbNoCommand = 1;
+	return false;
+}
+
+ushort CActorWolfenKnowledge::FUN_003d8da0()
+{
+	return this->aF4data->field_0x2ushort;
+}
+
+bool CBehaviourFighterWolfen::TreatContext_Attacked(CFightContext* pFightContext, int* pOut)
+{
+	CActorWolfen* pWolfen;
+	CActorWolfenKnowledge* pKnowledge;
+	bool bVar1;
+	bool bSuccess;
+	int iVar2;
+	uint uVar3;
+
+	bSuccess = false;
+
+	if (static_cast<CActorWolfen*>(this->pOwner)->pWolfenKnowledge == (CActorWolfenKnowledge*)0x0) {
+		*pOut = 0;
+		return false;
+	}
+
+	*pOut = 1;
+
+	pWolfen = static_cast<CActorWolfen*>(this->pOwner);
+	pKnowledge = pWolfen->pWolfenKnowledge;
+
+	bVar1 = pKnowledge->field_0x1c != 0;
+	if (bVar1) {
+		bVar1 = pKnowledge->field_0x1c == 2;
+		if (bVar1) {
+			bVar1 = pKnowledge->field_0x14 <= pKnowledge->field_0x20->field_0x10;
+		}
+	}
+
+	if (bVar1) {
+		if (pWolfen->field_0xb70 == 0) {
+			if (pWolfen->field_0xb6c == 0xc) {
+				pWolfen->field_0xb6c = 5;
+			}
+			else if (pWolfen->field_0xb6c == 0xb) {
+				pWolfen->field_0xb6c = 4;
+			}
+			else if (pWolfen->field_0xb6c == 0xa) {
+				pWolfen->field_0xb6c = 3;
+			}
+			else {
+				iVar2 = (int)pKnowledge->FUN_003d8da0();
+				switch (iVar2) {
+				case 1:
+					static_cast<CActorWolfen*>(this->pOwner)->field_0xb6c = 0xb;
+					break;
+				case 2:
+					static_cast<CActorWolfen*>(this->pOwner)->field_0xb6c = 0xc;
+					break;
+				case 3:
+					static_cast<CActorWolfen*>(this->pOwner)->field_0xb6c = 0xa;
+					break;
+				case 0:
+				case -1:
+				default:
+					static_cast<CActorWolfen*>(this->pOwner)->field_0xb6c = 2;
+					break;
+				}
+			}
+
+			static_cast<CActorWolfen*>(this->pOwner)->field_0xb70 = 1;
+		}
+	}
+	else {
+		pWolfen->field_0xb6c = 0xffffffff;
+		static_cast<CActorWolfen*>(this->pOwner)->field_0xb70 = 1;
+	}
+
+	pWolfen = static_cast<CActorWolfen*>(this->pOwner);
+	uVar3 = pWolfen->field_0xb6c;
+
+	if (((uVar3 == 5) || (uVar3 == 4)) || (uVar3 == 3)) {
+		bVar1 = false;
+		if (pWolfen->Func_0x1ac() != false) {
+			if ((1.0f - static_cast<CActorWolfen*>(this->pOwner)->field_0xa88) <= 0.0f + (1.0f * (float)CScene::Rand()) / 32767.0f) {
+				bVar1 = true;
+			}
+		}
+
+		if (bVar1) {
+			pWolfen = static_cast<CActorWolfen*>(this->pOwner);
+			iVar2 = pWolfen->field_0xb6c;
+
+			ValidateCommand();
+
+			if (iVar2 != -1) {
+				if (iVar2 == -1) {
+					uVar3 = 0;
+				}
+				else {
+					uVar3 = static_cast<CActorWolfen*>(this->pOwner)->field_0xb64[iVar2].field_0x0;
+				}
+
+				InitCommand(uVar3);
+				this->field_0x68 = 1;
+			}
+
+			this->currentCommandId = iVar2;
+			static_cast<CActorWolfen*>(this->pOwner)->field_0xb6c = 0xffffffff;
+			bSuccess = true;
+		}
+		else {
+			pWolfen = static_cast<CActorWolfen*>(this->pOwner);
+			if ((((ulong)pWolfen->validCommandMask.flags[1] << 0x3a) >> 0x3e & 1) != 0) {
+				ValidateCommand();
+				InitCommand(static_cast<CActorWolfen*>(this->pOwner)->field_0xb64[2].field_0x0);
+				this->field_0x68 = 1;
+				bSuccess = true;
+				this->currentCommandId = 2;
+			}
+
+			static_cast<CActorWolfen*>(this->pOwner)->field_0xb6c = 2;
+		}
+	}
+	else {
+		if ((((uVar3 == 0xc) || (uVar3 == 0xb)) || (uVar3 == 0xa)) || (uVar3 == 2)) {
+			if ((((ulong)pWolfen->validCommandMask.flags[1] << 0x3a) >> 0x3e & 1) != 0) {
+				ValidateCommand();
+				InitCommand(static_cast<CActorWolfen*>(this->pOwner)->field_0xb64[2].field_0x0);
+				this->field_0x68 = 1;
+				bSuccess = true;
+				this->currentCommandId = 2;
+			}
+		}
+	}
+
+	return bSuccess;
 }
 
 // Should be in: D:/Projects/b-witch/ActorWolfen_Fight.cpp

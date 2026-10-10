@@ -239,6 +239,7 @@ class CActorWolfenKnowledge
 {
 public:
 	void Init(int memMode, uint param_3, uint param_4, uint nbObjs, uint param_6);
+	ushort FUN_003d8da0();
 	void Reset();
 	void Term();
 
@@ -942,6 +943,8 @@ public:
 	bool FUN_001f7a80(uint commandId);
 	bool IsCommandFinished(uint param_2);
 	void ValidateCommand();
+	bool FUN_001f6110(CFightContext* pFightContext, int* pbNoCommand);
+	bool TreatContext_Attacked(CFightContext* pFightContext, int* pOut);
 	void PickCommand();
 	s_fighter_combo* PickCombo_Attack(CFightContext* pFightContext, bool param_3, bool param_4, bool param_5, bool param_6);
 	void GrabCommand();
