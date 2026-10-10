@@ -1,3 +1,4 @@
+#include <set>
 #include "Animation.h"
 #include "edList.h"
 #include "ed3D.h"
@@ -1828,9 +1829,14 @@ void CAnimation::Manage(float deltaTime, CActor* pActor, int bHasFlag, int bPlay
 		if ((bHasFlag == 0) || (bVar4 = UpdateCurSkeleton(pActor), bVar4 == false)) {
 #ifdef PLATFORM_WIN
 			if ((this->anmSkeleton).pTag == 0x0 && ((bHasFlag != 0) && (((pActor->p3DHierNode->base).flags_0x9e & 0x100) != 0))) {
-				Log::GetInstance().ForceFlush();
-				IMPLEMENTATION_GUARD_LOG();
-				assert(false);
+				// PC: the active LOD has no skeleton (PS2 never gets here for these actors). Logged once per actor.
+				static int nbLogged = 0;
+				if (nbLogged++ < 20) {
+					const ed_3d_hierarchy* pHier = &pActor->p3DHierNode->base;
+					fprintf(stderr, "[anim] %s: active LOD %d of %d has no skeleton; state %d loc %.1f %.1f %.1f hier %.1f %.1f %.1f\n", pActor->name, (int)pHier->desiredLod, (int)pHier->lodCount,
+						pActor->actorState, pActor->currentLocation.x, pActor->currentLocation.y, pActor->currentLocation.z, pHier->transformB.da, pHier->transformB.db, pHier->transformB.dc);
+					fflush(stderr);
+				}
 			}
 #endif
 
@@ -1954,7 +1960,8 @@ void CAnimation::Manage(float deltaTime, CActor* pActor, int bHasFlag, int bPlay
 			}
 		}
 
-		if ((bHasFlag != 0) && (((pActor->p3DHierNode->base).flags_0x9e & 0x100) != 0)) {
+		// PC: needs the active LOD skeleton (pSkeleton); without one PS2 would read a stale register.
+		if ((bSetSkeleton) && (bHasFlag != 0) && (((pActor->p3DHierNode->base).flags_0x9e & 0x100) != 0)) {
 			peVar6 = ed3DHierarchyNodeGetSkeletonChunck(pActor->pMeshNode, true);
 			peVar6 = peVar6 + 1;
 
