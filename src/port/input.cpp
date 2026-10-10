@@ -30,6 +30,29 @@ namespace Input {
 			}
 		}
 	}
+
+	static void PollBot(EDDEV_PORT* pController)
+	{
+		if (!gInputFunctions.botAnalog) {
+			return;
+		}
+
+		static float previous[Input::KeyboardController::numButtons] = {};
+		for (uint i = 0; i < Input::KeyboardController::numButtons; i++) {
+			const float value = gInputFunctions.botAnalog(i);
+			if (value < 0.0f) {
+				continue;
+			}
+
+			const bool bDown = value > 0.5f;
+			const bool bWasDown = previous[i] > 0.5f;
+			pController->pPadD[i].bPressed = bDown && !bWasDown;
+			pController->pPadD[i].bReleased = !bDown && bWasDown;
+			pController->pPadD[i].analogValue = value;
+			pController->pPadD[i].clickValue = value;
+			previous[i] = value;
+		}
+	}
 }
 
 uint Input::_edDevKeyboard(uint eventId, EDDEV_PORT* pController, void* param_3)
@@ -149,6 +172,7 @@ uint Input::_edDevKeyboard(uint eventId, EDDEV_PORT* pController, void* param_3)
 	{
 		PollKeyboard(pController);
 		PollGamepad(pController);
+		PollBot(pController);
 	}
 	break;
 	case EVENT_GET_STATUS:

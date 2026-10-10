@@ -332,13 +332,16 @@ std::string Renderer::Native::PostProcessing::GetEffectName(Effect effect)
 
 void Renderer::Native::PostProcessing::DumpFrameIfRequested()
 {
+	// KYA_FRAME_DUMP_EVERY=<sec> keeps dumping after the first one, to frame-dump-<n>.png.
 	static const char* pSeconds = getenv("KYA_FRAME_DUMP");
+	static const char* pEvery = getenv("KYA_FRAME_DUMP_EVERY");
 	static const auto start = std::chrono::steady_clock::now();
-	static bool bDone = false;
-	if (pSeconds == nullptr || bDone || std::chrono::steady_clock::now() - start < std::chrono::duration<double>(atof(pSeconds))) {
+	static double next = pSeconds ? atof(pSeconds) : 0.0;
+	static int index = 0;
+	if (pSeconds == nullptr || next < 0.0 || std::chrono::steady_clock::now() - start < std::chrono::duration<double>(next)) {
 		return;
 	}
-	bDone = true;
+	next = pEvery ? next + atof(pEvery) : -1.0;
 
 	// ponytail: stalls the GPU once; debug tool only.
 	vkDeviceWaitIdle(GetDevice());
@@ -371,6 +374,8 @@ void Renderer::Native::PostProcessing::DumpFrameIfRequested()
 		pixels[i + 3] = 0xff;
 	}
 
-	stbi_write_png("frame-dump.png", static_cast<int>(width), static_cast<int>(height), 4, pixels.data(), static_cast<int>(width * 4));
-	fprintf(stderr, "KYA_FRAME_DUMP: wrote frame-dump.png (%ux%u)\n", width, height);
+	char fileName[64];
+	snprintf(fileName, sizeof(fileName), pEvery ? "frame-dump-%03d.png" : "frame-dump.png", index++);
+	stbi_write_png(fileName, static_cast<int>(width), static_cast<int>(height), 4, pixels.data(), static_cast<int>(width * 4));
+	fprintf(stderr, "KYA_FRAME_DUMP: wrote %s (%ux%u)\n", fileName, width, height);
 }

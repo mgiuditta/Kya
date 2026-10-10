@@ -49,6 +49,9 @@ namespace Input
 		std::function<bool(uint32_t)> controllerReleased;
 		std::function<float(uint32_t)> controllerAnalog;
 		std::function<bool()> controllerAnyPressed;
+
+		// Debug bot: value for a route it drives, negative for routes it leaves to the pad.
+		std::function<float(uint32_t)> botAnalog;
 	};
 
 	extern InputFunctions gInputFunctions;

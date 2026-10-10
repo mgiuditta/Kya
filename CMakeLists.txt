@@ -771,6 +771,7 @@ else()
 		"${src_root}/port/debug_draw.h"
 		"${src_root}/port/random.cpp"
 		"${src_root}/port/input.cpp"
+		"${src_root}/port/guard.cpp"
 		"${src_root}/port/input.h"
 	)
 endif()

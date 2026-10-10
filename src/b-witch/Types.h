@@ -739,19 +739,22 @@ inline edF32MATRIX4 operator*(const edF32MATRIX4& lhs, const edF32MATRIX4& rhs)
 
 #define PLAY_INTRO_VIDEO 0
 
-#define IMPLEMENTATION_GUARD_FX(x) assert(false);
-#define IMPLEMENTATION_GUARD_EMOTION(x) assert(false);
+// Logs each guard site once to stderr (release builds too); debug builds abort unless KYA_GUARD_LOG is set.
+void ImplementationGuardHit(const char* pFile, int line);
+
+#define IMPLEMENTATION_GUARD_FX(x) ImplementationGuardHit(__FILE__, __LINE__);
+#define IMPLEMENTATION_GUARD_EMOTION(x) ImplementationGuardHit(__FILE__, __LINE__);
 #define IMPLEMENTATION_GUARD_PS2(x)
-#define IMPLEMENTATION_GUARD_ACTOR(x) assert(false);
-#define IMPLEMENTATION_GUARD_LIGHT(x) assert(false);
-#define IMPLEMENTATION_GUARD_UI(x) assert(false);
-#define IMPLEMENTATION_GUARD_SHADOW(x) assert(false);
-#define IMPLEMENTATION_GUARD_LOG(x) assert(false);
-#define IMPLEMENTATION_GUARD_HELP(x) assert(false);
+#define IMPLEMENTATION_GUARD_ACTOR(x) ImplementationGuardHit(__FILE__, __LINE__);
+#define IMPLEMENTATION_GUARD_LIGHT(x) ImplementationGuardHit(__FILE__, __LINE__);
+#define IMPLEMENTATION_GUARD_UI(x) ImplementationGuardHit(__FILE__, __LINE__);
+#define IMPLEMENTATION_GUARD_SHADOW(x) ImplementationGuardHit(__FILE__, __LINE__);
+#define IMPLEMENTATION_GUARD_LOG(x) ImplementationGuardHit(__FILE__, __LINE__);
+#define IMPLEMENTATION_GUARD_HELP(x) ImplementationGuardHit(__FILE__, __LINE__);
 
 #ifdef PLATFORM_WIN
 #include <assert.h>
-#define IMPLEMENTATION_GUARD(x) assert(false); 
+#define IMPLEMENTATION_GUARD(x) ImplementationGuardHit(__FILE__, __LINE__);
 #else
 #define IMPLEMENTATION_GUARD(x) MY_LOG("Hit an assert! %s, %d\n", __FILE__, __LINE__);
 #endif

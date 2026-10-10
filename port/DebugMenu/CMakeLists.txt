@@ -31,6 +31,7 @@ set(SOURCES
 	"src/DebugMenuLog.h"
 	"src/DebugMenuLog.cpp"
 	"src/DebugMenuInput.cpp"
+	"src/DebugBot.cpp"
 	"src/DebugMenuWorld.h"
 	"src/DebugMenuWorld.cpp"
 	"src/DebugMenuDebugPanel.h"
