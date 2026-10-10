@@ -3951,6 +3951,12 @@ uint CSoundStream::Play(uint soundInstanceId, uint otherId, edsound_3d_data* p3d
 		}
 	}
 
+	// PC: no matching and no free entry (or an entry without a sample) reads through null here;
+	// PS2 got away with reading low memory. Skip the sound instead of crashing.
+	if ((pSVar5 == (SoundEntry*)0x0) && (pSVar6 == (SoundEntry*)0x0)) {
+		return 0;
+	}
+
 	if (pSVar5 == (SoundEntry*)0x0) {
 		pSoundSampleEntryNode = (CDoubleLinkedNode<SoundSampleEntry> *)pSVar6->pNode;
 	}
@@ -3958,8 +3964,22 @@ uint CSoundStream::Play(uint soundInstanceId, uint otherId, edsound_3d_data* p3d
 		pSoundSampleEntryNode = (CDoubleLinkedNode<SoundSampleEntry> *)pSVar5->pNode;
 	}
 
+	if (pSoundSampleEntryNode == (CDoubleLinkedNode<SoundSampleEntry>*)0x0) {
+		return 0;
+	}
+
 	fVar10 = this->priority;
 	pPendingSoundNode = gFreePendingSoundPlays.RemoveHead();
+	if (pPendingSoundNode == (CDoubleLinkedNode<PendingSoundPlay>*)0x0) {
+		// PC: all 16 pending plays are in use; PS2 would write through null here. Drop this play.
+		static bool bLogged = false;
+		if (!bLogged) {
+			bLogged = true;
+			fprintf(stderr, "[audio] pending sound pool empty, dropping plays\n");
+		}
+		return 0;
+	}
+
 	(pPendingSoundNode->node).pSoundStream = this;
 	(pPendingSoundNode->node).p3dData = p3dData;
 	(pPendingSoundNode->node).pUserData = pUserData;
